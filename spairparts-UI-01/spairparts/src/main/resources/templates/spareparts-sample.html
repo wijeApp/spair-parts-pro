@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Spare Parts Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3498db',
+                        secondary: '#2c3e50',
+                        accent: '#e74c3c',
+                        success: '#27ae60',
+                        warning: '#f39c12',
+                        purple: '#9b59b6'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'pulse-glow': 'pulseGlow 2s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes pulseGlow {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(231, 76, 60, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(231, 76, 60, 0.5); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(231, 76, 60, 0.3); }
+        }
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* Loading States */
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Search highlighting */
+        .search-results-highlight {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        /* Custom animations for the dashboard */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="w-72 bg-gradient-to-b from-gray-800 via-gray-900 to-black text-white p-6 shadow-2xl">
+            <div class="mb-8 text-center">
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    Dashboard
+                </h2>
+            </div>
+            
+            <nav class="space-y-3">
+                <div class="nav-item active bg-gradient-to-r from-primary to-purple text-white px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg" data-section="overview">
+                    📊 Overview
+                </div>
+                <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="items">
+                    📦 Items
+                </div>
+                <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="analytics">
+                    📈 Analytics
+                </div>
+                <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="settings">
+                    ⚙️ Settings
+                </div>
+                
+                <hr class="my-6 border-gray-600">
+                
+                <div class="nav-item logout bg-gradient-to-r from-accent to-red-600 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg" onclick="logout()">
+                    🚪 Logout
+                </div>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 p-8 bg-white/95 backdrop-blur-sm overflow-y-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-2xl p-8 mb-8 shadow-xl border border-white/50">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div class="mb-6 lg:mb-0">
+                        <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent mb-2">
+                            Spare Parts Dashboard
+                        </h1>
+                        <div class="flex items-center gap-6 text-sm text-gray-600">
+                            <div class="bg-gray-100 px-4 py-2 rounded-full font-semibold">
+                                Welcome, <span id="username-display" th:text="${username ?: 'User'}">User</span>!
+                            </div>
+                            <div>Last Updated: <span id="last-updated" class="font-semibold"></span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Container -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" 
+                               id="search-bar" 
+                               placeholder="🔍 Search items by name, description, or ID..."
+                               class="px-6 py-3 border-2 border-gray-200 rounded-full focus:border-primary focus:ring-0 focus:outline-none transition-all duration-300 text-sm w-full sm:w-80">
+                        
+                        <div class="flex gap-2">
+                            <button id="search-button" 
+                                    class="bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm">
+                                🔍 Search
+                            </button>
+                            <button id="clear-search-button" 
+                                    class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 text-sm">
+                                ✖ Clear
+                            </button>
+                            <button class="bg-gradient-to-r from-accent to-red-600 hover:from-red-600 hover:to-accent text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 text-sm" onclick="logout()">
+                                🚪 Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Total Items</h3>
+                    <div class="text-4xl font-black bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent" id="total-items">0</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Total Value</h3>
+                    <div class="text-4xl font-black bg-gradient-to-r from-success to-green-600 bg-clip-text text-transparent" id="total-value">0</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Low Stock Items</h3>
+                    <div class="text-4xl font-black bg-gradient-to-r from-accent to-red-600 bg-clip-text text-transparent" id="low-stock">0</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Average Price</h3>
+                    <div class="text-4xl font-black bg-gradient-to-r from-warning to-yellow-600 bg-clip-text text-transparent" id="avg-price">0</div>
+                </div>
+            </div>
+            
+            <!-- Search Results Message -->
+            <div id="search-results-container"></div>
+            
+            <!-- Items Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="items-container">
+                <!-- Items will be rendered here -->
+            </div>
+            
+            <!-- Add Item Form -->
+            <div class="bg-white rounded-2xl p-8 shadow-xl border border-white/50 mb-8">
+                <h2 class="text-2xl font-bold text-center text-secondary mb-8">📦 Add New Item to Stock</h2>
+                <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <input type="text" 
+                           id="item-name" 
+                           placeholder="Item Name" 
+                           required 
+                           class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-success focus:ring-0 focus:outline-none transition-colors duration-300">
+                    
+                    <input type="text" 
+                           id="item-description" 
+                           placeholder="Item Description" 
+                           required 
+                           class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-success focus:ring-0 focus:outline-none transition-colors duration-300">
+                    
+                    <input type="number" 
+                           id="item-price" 
+                           placeholder="Price" 
+                           step="0.01" 
+                           min="0" 
+                           required 
+                           class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-success focus:ring-0 focus:outline-none transition-colors duration-300">
+                    
+                    <input type="number" 
+                           id="item-quantity" 
+                           placeholder="Quantity" 
+                           min="1" 
+                           required 
+                           class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-success focus:ring-0 focus:outline-none transition-colors duration-300">
+                    
+                    <button type="submit" 
+                            class="md:col-span-2 bg-gradient-to-r from-success to-green-600 hover:from-green-600 hover:to-success text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        Add Item to Stock
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Analytics Section -->
+            <div id="analytics-section" class="hidden bg-white rounded-2xl p-8 shadow-xl border border-white/50">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-secondary">📈 Analytics & Future Insights</h2>
+                </div>
+                
+                <!-- Charts Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-gray-50 rounded-xl p-6 text-center shadow-lg">
+                        <h3 class="text-lg font-bold text-secondary mb-4 uppercase tracking-wider">Stock Distribution</h3>
+                        <canvas id="stockChart" width="300" height="200" class="max-w-full"></canvas>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-6 text-center shadow-lg">
+                        <h3 class="text-lg font-bold text-secondary mb-4 uppercase tracking-wider">Price Analysis</h3>
+                        <canvas id="priceChart" width="300" height="200" class="max-w-full"></canvas>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-6 text-center shadow-lg">
+                        <h3 class="text-lg font-bold text-secondary mb-4 uppercase tracking-wider">Inventory Trends</h3>
+                        <canvas id="trendChart" width="300" height="200" class="max-w-full"></canvas>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-6 text-center shadow-lg">
+                        <h3 class="text-lg font-bold text-secondary mb-4 uppercase tracking-wider">Reorder Recommendations</h3>
+                        <canvas id="reorderChart" width="300" height="200" class="max-w-full"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Insights Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div class="bg-red-50 border-l-4 border-accent p-6 rounded-lg shadow-lg">
+                        <h4 class="text-lg font-bold text-secondary mb-4">🚨 Critical Actions Required</h4>
+                        <div id="critical-content" class="text-sm text-gray-700">Loading insights...</div>
+                    </div>
+                    <div class="bg-yellow-50 border-l-4 border-warning p-6 rounded-lg shadow-lg">
+                        <h4 class="text-lg font-bold text-secondary mb-4">⚠️ Attention Needed</h4>
+                        <div id="warning-content" class="text-sm text-gray-700">Loading insights...</div>
+                    </div>
+                    <div class="bg-blue-50 border-l-4 border-primary p-6 rounded-lg shadow-lg">
+                        <h4 class="text-lg font-bold text-secondary mb-4">💡 Strategic Recommendations</h4>
+                        <div id="recommendation-content" class="text-sm text-gray-700">Loading insights...</div>
+                    </div>
+                    <div class="bg-purple-50 border-l-4 border-purple p-6 rounded-lg shadow-lg">
+                        <h4 class="text-lg font-bold text-secondary mb-4">🔮 Future Predictions</h4>
+                        <div id="forecast-content" class="text-sm text-gray-700">Loading insights...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function fetchItems() {
+            try {
+                const res = await fetch('/api/spareparts');
+                return res.ok ? res.json() : [];
+            } catch (error) {
+                console.error('Failed to fetch items:', error);
+                return [];
+            }
+        }
+        
+        function updateStats(items) {
+            const totalItems = items.length;
+            const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const lowStockItems = items.filter(item => item.quantity < 10).length;
+            const avgPrice = totalItems > 0 ? totalValue / items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+            
+            document.getElementById('total-items').textContent = totalItems;
+            document.getElementById('total-value').textContent = totalValue.toFixed(2);
+            document.getElementById('low-stock').textContent = lowStockItems;
+            document.getElementById('avg-price').textContent = avgPrice.toFixed(2);
+        }
+        
+        function updateSearchResults(query, visibleCount, totalCount) {
+            // Remove existing search results message
+            const existingMessage = document.getElementById('search-results-message');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            // Add search results message if there's a search query
+            if (query) {
+                const itemsContainer = document.getElementById('items-container');
+                const message = document.createElement('div');
+                message.id = 'search-results-message';
+                message.className = 'bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg text-green-700 fade-in';
+                message.innerHTML = `🔍 Search results for "<strong>${query}</strong>": ${visibleCount} of ${totalCount} items found`;
+                itemsContainer.parentNode.insertBefore(message, itemsContainer);
+            }
+        }
+        
+        // Enhanced render function with animations
+        function renderItems(items) {
+            const container = document.getElementById('items-container');
+            container.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'bg-white rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl fade-in';
+                itemCard.style.animationDelay = `${index * 0.1}s`;
+                itemCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold text-secondary item-name">${item.name}</h3>
+                        <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold item-id">ID: ${item.id}</span>
+                    </div>
+                    <p class="text-gray-600 mb-4 item-description">${item.description}</p>
+                    <div class="flex justify-between items-center">
+                        <div class="text-2xl font-bold bg-gradient-to-r from-success to-green-600 bg-clip-text text-transparent">
+                            ${item.price.toFixed(2)}
+                        </div>
+                        <div class="px-4 py-2 rounded-full text-sm font-bold ${item.quantity < 10 ? 'bg-gradient-to-r from-accent to-red-600 text-white animate-pulse-glow' : 'bg-gradient-to-r from-primary to-blue-600 text-white'}">
+                            Qty: ${item.quantity}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemCard);
+            });
+        }
+        
+        async function loadDashboard() {
+            const items = await fetchItems();
+            updateStats(items);
+            renderItems(items);
+            document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        }
+        
+        // Load dashboard on page load
+        loadDashboard();
+        
+        // Refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+
+        // Add item form submission
+        document.getElementById('add-item-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('item-name').value.trim();
+            const description = document.getElementById('item-description').value.trim();
+            const price = parseFloat(document.getElementById('item-price').value);
+            const quantity = parseInt(document.getElementById('item-quantity').value);
+
+            // Validation
+            if (!name || !description) {
+                alert('⚠️ Please fill in all fields');
+                return;
+            }
+            if (price <= 0) {
+                alert('⚠️ Price must be greater than 0');
+                return;
+            }
+            if (quantity <= 0) {
+                alert('⚠️ Quantity must be greater than 0');
+                return;
+            }
+
+            const newItem = { name, description, price, quantity };
+            
+            try {
+                const response = await fetch('/api/spareparts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newItem)
+                });
+
+                if (response.ok) {
+                    alert('✅ Item added successfully to stock!');
+                    document.getElementById('add-item-form').reset();
+                    loadDashboard(); // Refresh the dashboard
+                } else {
+                    alert('❌ Failed to add item. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error adding item:', error);
+                alert('🚨 An error occurred. Please try again.');
+            }
+        });
+
+        // Navigation functionality
+        document.querySelectorAll('.nav-item:not(.logout)').forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all nav items
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white'));
+                // Add active class to clicked item
+                this.classList.add('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white');
+                
+                const section = this.getAttribute('data-section');
+                
+                // Hide all sections
+                document.getElementById('analytics-section').classList.add('hidden');
+                
+                if (section === 'analytics') {
+                    document.getElementById('analytics-section').classList.remove('hidden');
+                    loadAnalytics();
+                }
+            });
+        });
+
+        async function loadAnalytics() {
+            const items = await fetchItems();
+            generateCharts(items);
+            generateInsights(items);
+        }
+
+        function generateCharts(items) {
+            // Stock Distribution Chart
+            const stockCtx = document.getElementById('stockChart').getContext('2d');
+            const stockData = items.map(item => ({ name: item.name, quantity: item.quantity }));
+            drawBarChart(stockCtx, stockData, 'Quantity');
+
+            // Price Analysis Chart
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            const priceData = items.map(item => ({ name: item.name, value: item.price }));
+            drawBarChart(priceCtx, priceData, 'Price');
+
+            // Inventory Trends Chart (simulated data for demonstration)
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            drawTrendChart(trendCtx, items);
+
+            // Reorder Recommendations Chart
+            const reorderCtx = document.getElementById('reorderChart').getContext('2d');
+            const lowStockItems = items.filter(item => item.quantity < 10);
+            drawReorderChart(reorderCtx, lowStockItems);
+        }
+
+        function drawBarChart(ctx, data, label) {
+            const canvas = ctx.canvas;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (data.length === 0) {
+                ctx.fillStyle = '#3498db';
+                ctx.font = '16px Arial';
+                ctx.fillText('No data available', canvas.width/2 - 60, canvas.height/2);
+                return;
+            }
+            
+            const maxValue = Math.max(...data.map(d => d.value || d.quantity));
+            const barWidth = Math.max(20, canvas.width / data.length - 10);
+            const barHeight = canvas.height - 40;
+            
+            data.slice(0, Math.floor(canvas.width / (barWidth + 10))).forEach((item, index) => {
+                const value = item.value || item.quantity;
+                const height = (value / maxValue) * barHeight;
+                const x = index * (barWidth + 10) + 5;
+                const y = canvas.height - height - 20;
+                
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(x, y, barWidth, height);
+                
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = '10px Arial';
+                ctx.fillText(item.name.substring(0, 8), x, canvas.height - 5);
+                ctx.fillText(value.toFixed(1), x, y - 5);
+            });
+        }
+
+        function drawTrendChart(ctx, items) {
+            const canvas = ctx.canvas;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Simulated trend data for the last 6 months
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const trendData = months.map((month, index) => totalValue * (0.8 + index * 0.04));
+            
+            const maxValue = Math.max(...trendData);
+            const stepX = canvas.width / (months.length - 1);
+            const stepY = (canvas.height - 40) / maxValue;
+            
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            trendData.forEach((value, index) => {
+                const x = index * stepX;
+                const y = canvas.height - (value * stepY) - 20;
+                
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+                
+                // Draw points
+                ctx.fillStyle = '#27ae60';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw labels
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = '10px Arial';
+                ctx.fillText(months[index], x - 10, canvas.height - 5);
+                ctx.fillText(value.toFixed(0), x - 15, y - 10);
+            });
+            
+            ctx.strokeStyle = '#27ae60';
+            ctx.stroke();
+        }
+
+        function drawReorderChart(ctx, lowStockItems) {
+            const canvas = ctx.canvas;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (lowStockItems.length === 0) {
+                ctx.fillStyle = '#27ae60';
+                ctx.font = '16px Arial';
+                ctx.fillText('All items well stocked!', canvas.width/2 - 80, canvas.height/2);
+                return;
+            }
+            
+            const reorderData = lowStockItems.slice(0, 5).map(item => ({
+                name: item.name,
+                current: item.quantity,
+                recommended: Math.max(20, item.quantity * 3)
+            }));
+            
+            const maxValue = Math.max(...reorderData.map(d => d.recommended));
+            const barWidth = canvas.width / reorderData.length / 2 - 5;
+            
+            reorderData.forEach((item, index) => {
+                const x = index * (barWidth * 2 + 10) + 5;
+                const currentHeight = (item.current / maxValue) * (canvas.height - 40);
+                const recommendedHeight = (item.recommended / maxValue) * (canvas.height - 40);
+                
+                // Current stock (red)
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(x, canvas.height - currentHeight - 20, barWidth, currentHeight);
+                
+                // Recommended stock (green)
+                ctx.fillStyle = '#27ae60';
+                ctx.fillRect(x + barWidth, canvas.height - recommendedHeight - 20, barWidth, recommendedHeight);
+                
+                // Labels
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = '8px Arial';
+                ctx.fillText(item.name.substring(0, 6), x, canvas.height - 5);
+            });
+        }
+
+        function generateInsights(items) {
+            // Critical insights
+            const criticalItems = items.filter(item => item.quantity <= 5);
+            const criticalContent = criticalItems.length > 0 ? 
+                `${criticalItems.length} items critically low: ${criticalItems.map(i => i.name).join(', ')}` :
+                'No critical stock issues';
+            document.getElementById('critical-content').innerHTML = criticalContent;
+
+            // Warning insights
+            const lowStockItems = items.filter(item => item.quantity > 5 && item.quantity < 10);
+            const warningContent = lowStockItems.length > 0 ?
+                `${lowStockItems.length} items need restocking: ${lowStockItems.map(i => i.name).join(', ')}` :
+                'Stock levels are healthy';
+            document.getElementById('warning-content').innerHTML = warningContent;
+
+            // Recommendations
+            const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const avgPrice = totalValue / Math.max(1, items.reduce((sum, item) => sum + item.quantity, 0));
+            const highValueItems = items.filter(item => item.price > avgPrice * 1.5);
+            const recommendationContent = `
+                • Consider bulk purchasing for ${criticalItems.length + lowStockItems.length} low-stock items<br>
+                • High-value items (${highValueItems.length}): Monitor closely for demand patterns<br>
+                • Total inventory value: $${totalValue.toFixed(2)}
+            `;
+            document.getElementById('recommendation-content').innerHTML = recommendationContent;            // Forecast
+            const forecastContent = `
+                • Expected reorder cost: ${((criticalItems.length + lowStockItems.length) * avgPrice * 10).toFixed(2)}<br>
+                • Suggested safety stock: 15 units per item<br>
+                • Next review date: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}<br>
+                • Inventory turnover: Estimated 6 months
+            `;
+            document.getElementById('forecast-content').innerHTML = forecastContent;
+        }
+
+        // Search functionality
+        function performSearch() {
+            const query = document.getElementById('search-bar').value.toLowerCase().trim();
+            const items = document.querySelectorAll('#items-container > div');
+            let visibleCount = 0;
+            
+            items.forEach(item => {
+                const name = item.querySelector('.item-name').textContent.toLowerCase();
+                const description = item.querySelector('.item-description').textContent.toLowerCase();
+                const itemId = item.querySelector('.item-id').textContent.toLowerCase();
+                
+                // Remove previous highlights
+                removeHighlights(item);
+                
+                if (query === '' || name.includes(query) || description.includes(query) || itemId.includes(query)) {
+                    item.style.display = '';
+                    visibleCount++;
+                    
+                    // Add highlights if there's a search query
+                    if (query) {
+                        highlightSearchTerm(item, query);
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show search results count
+            updateSearchResults(query, visibleCount, items.length);
+        }
+        
+        function highlightSearchTerm(item, query) {
+            const nameElement = item.querySelector('.item-name');
+            const descElement = item.querySelector('.item-description');
+            const idElement = item.querySelector('.item-id');
+            
+            [nameElement, descElement, idElement].forEach(element => {
+                if (element && element.textContent.toLowerCase().includes(query)) {
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    element.innerHTML = element.textContent.replace(regex, '<span class="search-results-highlight">$1</span>');
+                }
+            });
+        }
+        
+        function removeHighlights(item) {
+            const highlightedElements = item.querySelectorAll('.search-results-highlight');
+            highlightedElements.forEach(element => {
+                const parent = element.parentNode;
+                parent.replaceChild(document.createTextNode(element.textContent), element);
+                parent.normalize();
+            });
+        }
+        
+        function clearSearch() {
+            document.getElementById('search-bar').value = '';
+            performSearch(); // This will show all items and remove highlights
+        }
+
+        // Event listeners for search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search button click
+            document.getElementById('search-button').addEventListener('click', performSearch);
+            
+            // Clear button click
+            document.getElementById('clear-search-button').addEventListener('click', clearSearch);
+            
+            // Search on Enter key press
+            document.getElementById('search-bar').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // Real-time search as user types
+            document.getElementById('search-bar').addEventListener('input', function() {
+                // Debounce the search to avoid too many calls
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(performSearch, 300);
+            });
+        });
+
+        // Logout functionality
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Create a form to submit POST request for logout
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/logout';
+                
+                // Add CSRF token if needed
+                const csrfToken = document.querySelector('meta[name="_csrf"]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = csrfToken.getAttribute('content');
+                    form.appendChild(csrfInput);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

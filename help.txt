@@ -1,0 +1,30 @@
+API Endpoints
+Spare Parts Management
+POST /api/inventory/spareparts - Create a new spare part
+GET /api/inventory/spareparts - Get all spare parts
+GET /api/inventory/spareparts/search?searchTerm={term} - Search spare parts
+GET /api/inventory/spareparts/category/{categoryName} - Get spare parts by category
+GET /api/inventory/spareparts/lowstock - Get low stock parts
+GET /api/inventory/spareparts/{sparePartId}/stock - Get current stock level
+GET /api/inventory/spareparts/{sparePartId}/transactions - Get transaction history
+Inventory Operations
+POST /api/inventory/spareparts/{sparePartId}/issue - Issue spare parts
+POST /api/inventory/spareparts/{sparePartId}/receive - Receive spare parts
+POST /api/inventory/spareparts/{sparePartId}/reserve - Reserve spare parts
+Supplier Management
+POST /api/inventory/suppliers - Create a new supplier
+GET /api/inventory/suppliers - Get all suppliers
+Category Management
+POST /api/inventory/categories - Create a new category
+GET /api/inventory/categories - Get all categories
+Transaction Management
+GET /api/inventory/transactions - Get all transactions
+Example Usage URLs
+When the application is running, you can access these endpoints at:
+
+Get all spare parts: http://localhost:8080/api/inventory/spareparts
+Search spare parts: http://localhost:8080/api/inventory/spareparts/search?searchTerm=brake
+Get low stock items: http://localhost:8080/api/inventory/spareparts/lowstock
+Get all suppliers: http://localhost:8080/api/inventory/suppliers
+Get all categories: http://localhost:8080/api/inventory/categories
+To start the application, you would typically run:
