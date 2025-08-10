@@ -134,7 +134,7 @@ function Test-UnauthorizedUpdate {
         
         try {
             $response = Invoke-WebRequest -Uri "http://localhost:8082/api/spareparts/1" -Method PUT -Body $testData -ContentType "application/json" -WebSession $unauthorizedSession -UseBasicParsing
-            Write-Host "   ❌ Security vulnerability: Unauthorized update succeeded!" -ForegroundColor Red
+            Write-Host "   ❌ Security vulnerability: Unauthorized update succeeded! Status: $($response.StatusCode)" -ForegroundColor Red
             return $false
         }
         catch {
@@ -193,7 +193,7 @@ Write-Host ""
 
 # Test admin login
 $adminSession = Test-AdminLogin
-if ($adminSession -eq $null) {
+if ($null -eq $adminSession) {
     Write-Host "❌ Cannot proceed without admin session" -ForegroundColor Red
     Write-Host ""
     Read-Host "Press Enter to exit"
