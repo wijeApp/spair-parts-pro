@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Spare Parts Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+    <!-- Include CSRF token in Thymeleaf forms automatically -->
+    <meta name="_csrf_parameterName" th:content="${_csrf?.parameterName}"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -82,164 +83,77 @@
         
         .slide-in {
             animation: slideIn 0.3s ease-out;
-        }    </style>
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600">
-    <!-- Mobile Menu Button -->
-    <button id="mobile-menu-button" class="fixed top-4 left-4 z-50 md:hidden bg-gray-800 text-white p-3 rounded-lg shadow-lg hover:bg-gray-700 transition-all duration-300">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-    </button>
-
-    <!-- Mobile Menu Overlay -->
-    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
-
-    <!-- Main Container -->
     <div class="flex min-h-screen">
-        <!-- Responsive Sidebar -->
-        <div id="sidebar" class="fixed md:relative transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-40 w-72 bg-gradient-to-b from-gray-800 via-gray-900 to-black text-white shadow-2xl h-full overflow-y-auto">
-            <div class="p-6">
-                <!-- Sidebar Header -->
-                <div class="mb-8 text-center relative">
-                    <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                        Dashboard
-                    </h2>
-                    <!-- Close button for mobile -->
-                    <button id="close-mobile-menu" class="absolute top-0 right-0 md:hidden text-white hover:text-gray-300 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- User Info Section -->
-                <div class="mb-6 p-4 bg-gray-700/50 rounded-xl">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-                            <span class="text-white font-bold text-sm" th:text="${username != null ? #strings.substring(username, 0, 1) : 'U'}">U</span>
-                        </div>
-                        <div>
-                            <div class="text-white font-semibold text-sm" th:text="${username ?: 'User'}">User</div>
-                            <div class="text-gray-300 text-xs" th:text="${userRole ?: 'USER'}">USER</div>
-                            <span th:if="${isAdmin}" class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">ADMIN</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Navigation -->
-                <nav class="space-y-3">
-                    <div class="nav-item active bg-gradient-to-r from-primary to-purple text-white px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg" data-section="overview">
-                        <div class="flex items-center space-x-3">
-                            <span>📊</span>
-                            <span class="font-medium">Overview</span>
-                        </div>
-                    </div>
-                    <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="items">
-                        <div class="flex items-center space-x-3">
-                            <span>📦</span>
-                            <span class="font-medium">Items</span>
-                            <span id="items-count-badge" class="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">0</span>
-                        </div>
-                    </div>
-                    <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="analytics">
-                        <div class="flex items-center space-x-3">
-                            <span>📈</span>
-                            <span class="font-medium">Analytics</span>
-                        </div>
-                    </div>
-                    <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="settings">
-                        <div class="flex items-center space-x-3">
-                            <span>⚙️</span>
-                            <span class="font-medium">Settings</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Admin Only Section -->
-                    <div sec:authorize="hasRole('ADMIN')" class="border-t border-gray-600 pt-4 mt-4">
-                        <div class="text-xs text-gray-400 uppercase tracking-wider mb-3 px-4">Admin Tools</div>
-                        <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="admin">
-                            <div class="flex items-center space-x-3">
-                                <span>🔐</span>
-                                <span class="font-medium">Admin Panel</span>
-                            </div>
-                        </div>
-                        <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="users">
-                            <div class="flex items-center space-x-3">
-                                <span>👥</span>
-                                <span class="font-medium">User Management</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Actions -->
-                    <div class="border-t border-gray-600 pt-4 mt-4">
-                        <div class="text-xs text-gray-400 uppercase tracking-wider mb-3 px-4">Quick Actions</div>
-                        <button id="quick-add-item" class="w-full nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-green-600 hover:scale-105 bg-green-500 text-white mb-2">
-                            <div class="flex items-center space-x-3">
-                                <span>➕</span>
-                                <span class="font-medium">Add Item</span>
-                            </div>
-                        </button>
-                        <button id="quick-search" class="w-full nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:scale-105 bg-blue-500 text-white">
-                            <div class="flex items-center space-x-3">
-                                <span>🔍</span>
-                                <span class="font-medium">Search Items</span>
-                            </div>
-                        </button>
-                    </div>
-                    
-                    <hr class="my-6 border-gray-600">
-                    
-                    <!-- Logout Button -->
-                    <div class="nav-item logout bg-gradient-to-r from-accent to-red-600 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg" onclick="logout()">
-                        <div class="flex items-center space-x-3">
-                            <span>🚪</span>
-                            <span class="font-medium">Logout</span>
-                        </div>
-                    </div>
-                </nav>
+        <!-- Sidebar -->
+        <div class="w-72 bg-gradient-to-b from-gray-800 via-gray-900 to-black text-white p-6 shadow-2xl">
+            <div class="mb-8 text-center">
+                <h2 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent" th:text="${#strings.isEmpty(pageTitle) ? 'Dashboard' : pageTitle}">
+                    Dashboard
+                </h2>
             </div>
+            
+            <nav class="space-y-3">
+                <div class="nav-item active bg-gradient-to-r from-primary to-purple text-white px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg" data-section="overview">
+                    📊 Overview
+                </div>
+                <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="items">
+                    📦 Items
+                </div>
+                <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="analytics">
+                    📈 Analytics
+                </div>
+                <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="settings">
+                    ⚙️ Settings
+                </div>
+                
+                <hr class="my-6 border-gray-600">
+                
+                <div class="nav-item logout bg-gradient-to-r from-accent to-red-600 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg" onclick="logout()">
+                    🚪 Logout
+                </div>
+            </nav>
         </div>
-          <!-- Main Content Area - Responsive -->
-        <div class="flex-1 md:ml-0 p-4 md:p-8 bg-white/95 backdrop-blur-sm overflow-y-auto min-h-screen">
-            <!-- Header - Mobile Responsive -->
-            <div class="bg-white rounded-2xl p-4 md:p-8 mb-6 md:mb-8 shadow-xl border border-white/50">
+        
+        <!-- Main Content -->
+        <div class="flex-1 p-8 bg-white/95 backdrop-blur-sm overflow-y-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-2xl p-8 mb-8 shadow-xl border border-white/50">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                     <div class="mb-6 lg:mb-0">
-                        <h1 class="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent mb-2">
+                        <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent mb-2">
                             Spare Parts Dashboard
-                        </h1>
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-gray-600">
+                        </h1>                        <div class="flex items-center gap-6 text-sm text-gray-600">
                             <div class="bg-gray-100 px-4 py-2 rounded-full font-semibold">
-                                Welcome, <span id="username-display" th:text="${username ?: 'User'}">User</span>!
-                                <span th:if="${isAdmin}" class="ml-2 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">ADMIN</span>
+                                Welcome, <span th:text="${#authentication.name}">User</span>!
+                                <span th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')}" class="ml-2 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">ADMIN</span>
                             </div>
-                            <div class="text-xs sm:text-sm">Last Updated: <span id="last-updated" class="font-semibold"></span></div>
+                            <div>Last Updated: <span id="last-updated" class="font-semibold"></span></div>
                             <div class="flex items-center gap-2">
                                 <div id="db-status" class="w-3 h-3 rounded-full bg-gray-400"></div>
                                 <span id="db-status-text" class="text-xs">Connecting...</span>
                             </div>
                         </div>
-                    </div>                    
-                    <!-- Search Container - Mobile Responsive -->
+                    </div>
+                    
+                    <!-- Search Container -->
                     <div class="flex flex-col sm:flex-row gap-3">
                         <input type="text" 
                                id="search-bar" 
                                placeholder="🔍 Search items by name, description, or ID..."
-                               class="px-4 md:px-6 py-3 border-2 border-gray-200 rounded-full focus:border-primary focus:ring-0 focus:outline-none transition-all duration-300 text-sm w-full sm:w-80">
+                               class="px-6 py-3 border-2 border-gray-200 rounded-full focus:border-primary focus:ring-0 focus:outline-none transition-all duration-300 text-sm w-full sm:w-80">
                         
                         <div class="flex gap-2">
                             <button id="search-button" 
-                                    class="bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary text-white px-4 md:px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm">
-                                🔍 <span class="hidden sm:inline">Search</span>
+                                    class="bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm">
+                                🔍 Search
                             </button>
                             <button id="clear-search-button" 
-                                    class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-4 md:px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 text-sm">
-                                ✖ <span class="hidden sm:inline">Clear</span>
-                            </button>
-                            <button class="md:hidden bg-gradient-to-r from-accent to-red-600 hover:from-red-600 hover:to-accent text-white px-4 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 text-sm" onclick="logout()">
-                                🚪
+                                    class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 text-sm">
+                                ✖ Clear
                             </button>
                             <button class="bg-gradient-to-r from-accent to-red-600 hover:from-red-600 hover:to-accent text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 text-sm" onclick="logout()">
                                 🚪 Logout
@@ -274,7 +188,38 @@
             
             <!-- Items Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="items-container">
-                <!-- Items will be rendered here -->
+                <div th:each="item : ${spareparts}" class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold text-secondary item-name" th:text="${item.name}">Item Name</h3>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold item-id" th:text="'ID: ' + ${item.id}">ID: 0</span>
+                            <div class="ml-2 flex items-center" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+                                <button th:onclick="'openUpdateModal(' + ${item.id} + ', \'' + ${item.name} + '\', \'' + ${item.description} + '\', ' + ${item.price} + ', ' + ${item.quantity} + ', \'' + ${item.currency ?: 'LKR'} + '\')'"
+                                        class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105 mr-2">
+                                    ✏️ Update
+                                </button>
+                                <button th:onclick="'deleteItem(' + ${item.id} + ', \'' + ${item.name} + '\')'"
+                                        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4 item-description" th:text="${item.description}">Description</p>
+                    <div class="flex justify-between items-center">
+                        <div class="text-2xl font-bold bg-gradient-to-r from-success to-green-600 bg-clip-text text-transparent">
+                            <span th:text="${#numbers.formatDecimal(item.price, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                            <span th:text="${item.currency ?: 'LKR'}">LKR</span>
+                        </div>
+                        <div th:class="${'px-4 py-2 rounded-full text-sm font-bold ' + (${item.quantity < 10 ? 'bg-gradient-to-r from-accent to-red-600 text-white animate-pulse-glow' : 'bg-gradient-to-r from-primary to-blue-600 text-white'})}">
+                            <span th:text="'Qty: ' + ${item.quantity}">Qty: 0</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-400">
+                        <span th:text="'DB ID: ' + ${item.id} + ' | Currency: ' + ${item.currency ?: 'LKR'}">DB ID: 0 | Currency: LKR</span>
+                        <span th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}" th:text="' | Role: ' + ${#authentication.authorities[0].authority}"> | Role: ADMIN</span>
+                    </div>
+                </div>
             </div>
             
             <!-- Add Item Form -->
@@ -369,10 +314,10 @@
                 </div>
             </div>
         </div>    </div>
-      <script>        // Store admin status from server
-        const isAdmin = [[${isAdmin}]] || false;
-        const currentUser = '[[${username}]]' || 'User';
-        const userRole = '[[${userRole}]]' || 'USER';
+      <script>        // Store admin status from server        // Get authentication info from Thymeleaf
+        const isAdmin = /*[[${#authorization.expression('hasRole(''ROLE_ADMIN'')')}]]*/ false;
+        const currentUser = /*[[${#authentication.name}]]*/ 'anonymous';
+        const userRole = /*[[${#authentication.authorities[0].authority}]]*/ 'ROLE_USER';
         
         // Admin status should no longer be forced as testing is complete
         const isAdminForced = false;
@@ -383,166 +328,20 @@
         console.log('- isAdminForced:', isAdminForced);
         console.log('- currentUser:', currentUser);
         console.log('- userRole:', userRole);
-          // Add visual debug indicator to page (bottom left)
+          // Add visual debug indicator to page
         setTimeout(() => {
             const debugDiv = document.createElement('div');
             debugDiv.style.position = 'fixed';
-            debugDiv.style.bottom = '20px';
-            debugDiv.style.left = '20px';
-            debugDiv.style.backgroundColor = isAdminForced ? 'green' : (isAdmin ? 'blue' : 'red');
+            debugDiv.style.bottom = '10px';
+            debugDiv.style.left = '10px';
+            debugDiv.style.backgroundColor = isAdminForced ? 'green' : 'red';
             debugDiv.style.color = 'white';
-            debugDiv.style.padding = '12px';
-            debugDiv.style.borderRadius = '8px';
+            debugDiv.style.padding = '10px';
+            debugDiv.style.borderRadius = '5px';
             debugDiv.style.zIndex = '9999';
-            debugDiv.style.fontSize = '12px';
-            debugDiv.style.fontFamily = 'monospace';
-            debugDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-            debugDiv.style.border = '2px solid rgba(255,255,255,0.2)';
-            debugDiv.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 4px;">🔍 DEBUG INFO</div>
-                <div>Admin: ${isAdmin ? '✅' : '❌'} (${isAdmin})</div>
-                <div>User: ${currentUser}</div>
-                <div>Role: ${userRole}</div>
-                <div style="margin-top: 4px; font-size: 10px; opacity: 0.8;">
-                    ${new Date().toLocaleTimeString()}
-                </div>
-            `;
+            debugDiv.innerHTML = `DEBUG: isAdmin=${isAdmin}<br>User: ${currentUser}<br>Role: ${userRole}`;
             document.body.appendChild(debugDiv);
         }, 1000);
-        
-        // Mobile Menu Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeMobileMenu();
-            initializeQuickActions();
-            updateItemsCount();
-        });
-
-        function initializeMobileMenu() {
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-menu-overlay');
-            const closeMobileMenu = document.getElementById('close-mobile-menu');
-
-            function openMobileMenu() {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-                console.log('📱 Mobile menu opened');
-            }
-
-            function closeMobileMenuFunc() {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-                document.body.style.overflow = 'auto';
-                console.log('📱 Mobile menu closed');
-            }
-
-            // Event listeners
-            if (mobileMenuButton) {
-                mobileMenuButton.addEventListener('click', openMobileMenu);
-            }
-
-            if (closeMobileMenu) {
-                closeMobileMenu.addEventListener('click', closeMobileMenuFunc);
-            }
-
-            if (overlay) {
-                overlay.addEventListener('click', closeMobileMenuFunc);
-            }
-
-            // Close mobile menu when nav item is clicked (mobile only)
-            const navItems = document.querySelectorAll('.nav-item:not(.logout):not(button)');
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    if (window.innerWidth < 768) { // Only on mobile
-                        closeMobileMenuFunc();
-                    }
-                });
-            });
-
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) { // Desktop size
-                    closeMobileMenuFunc();
-                }
-            });
-
-            // ESC key to close mobile menu
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && window.innerWidth < 768) {
-                    closeMobileMenuFunc();
-                }
-            });
-        }
-
-        function initializeQuickActions() {
-            // Quick Add Item button
-            const quickAddButton = document.getElementById('quick-add-item');
-            if (quickAddButton) {
-                quickAddButton.addEventListener('click', () => {
-                    // Scroll to add item form
-                    const addForm = document.getElementById('add-item-form');
-                    if (addForm) {
-                        addForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        // Focus on first input
-                        const firstInput = addForm.querySelector('input');
-                        if (firstInput) {
-                            setTimeout(() => firstInput.focus(), 500);
-                        }
-                    }
-                    // Close mobile menu if open
-                    if (window.innerWidth < 768) {
-                        document.getElementById('sidebar').classList.add('-translate-x-full');
-                        document.getElementById('mobile-menu-overlay').classList.add('hidden');
-                        document.body.style.overflow = 'auto';
-                    }
-                });
-            }
-
-            // Quick Search button
-            const quickSearchButton = document.getElementById('quick-search');
-            if (quickSearchButton) {
-                quickSearchButton.addEventListener('click', () => {
-                    // Focus on search bar
-                    const searchBar = document.getElementById('search-bar');
-                    if (searchBar) {
-                        searchBar.focus();
-                        searchBar.select();
-                    }
-                    // Close mobile menu if open
-                    if (window.innerWidth < 768) {
-                        document.getElementById('sidebar').classList.add('-translate-x-full');
-                        document.getElementById('mobile-menu-overlay').classList.add('hidden');
-                        document.body.style.overflow = 'auto';
-                    }
-                });
-            }
-        }
-
-        function updateItemsCount() {
-            // Update items count badge in sidebar
-            const updateCount = () => {
-                const itemsContainer = document.getElementById('items-container');
-                const itemCards = itemsContainer ? itemsContainer.children.length : 0;
-                const badge = document.getElementById('items-count-badge');
-                if (badge) {
-                    badge.textContent = itemCards;
-                    // Add animation when count changes
-                    badge.classList.add('animate-pulse');
-                    setTimeout(() => badge.classList.remove('animate-pulse'), 1000);
-                }
-            };
-
-            // Update count initially and whenever items change
-            updateCount();
-            
-            // Watch for changes in items container
-            const itemsContainer = document.getElementById('items-container');
-            if (itemsContainer) {
-                const observer = new MutationObserver(updateCount);
-                observer.observe(itemsContainer, { childList: true });
-            }
-        }
         
         // Add debug logging for database connectivity
         console.log('Dashboard initialized - connecting to MySQL database...');
@@ -664,9 +463,9 @@
               items.forEach((item, index) => {
                 const itemCard = document.createElement('div');
                 itemCard.className = 'bg-white rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl fade-in';
-                itemCard.style.animationDelay = `${index * 0.1}s`;                // Create admin buttons (update and delete) - only visible for admins
-                const updateButtonHtml = isAdmin ? `
-                    <button onclick="openUpdateModal(${item.id}, '${item.name}', '${item.description}', ${item.price}, ${item.quantity}, '${item.currency || 'LKR'}')" 
+                itemCard.style.animationDelay = `${index * 0.1}s`;                // Create admin buttons (update and delete) - only visible for admins                const updateButtonHtml = isAdmin ? `
+                    <button th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
+                            onclick="openUpdateModal(${item.id}, '${item.name}', '${item.description}', ${item.price}, ${item.quantity}, '${item.currency || 'LKR'}')" 
                             class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105 mr-2">
                         ✏️ Update
                     </button>
@@ -782,92 +581,24 @@
                 console.error('Error adding item:', error);
                 alert('🚨 Database connection error. Please check if MySQL is running.');
             }
-        });        // Enhanced Navigation functionality with mobile support
-        document.querySelectorAll('.nav-item:not(.logout):not(button)').forEach(item => {
+        });
+
+        // Navigation functionality
+        document.querySelectorAll('.nav-item:not(.logout)').forEach(item => {
             item.addEventListener('click', function() {
-                // Skip if this is a button (quick actions)
-                if (this.tagName === 'BUTTON') return;
-                
                 // Remove active class from all nav items
-                document.querySelectorAll('.nav-item:not(button)').forEach(nav => {
-                    nav.classList.remove('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white');
-                });
-                
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white'));
                 // Add active class to clicked item
                 this.classList.add('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white');
                 
                 const section = this.getAttribute('data-section');
-                console.log(`📋 Navigation: Switching to section '${section}'`);
                 
-                // Hide all sections first
-                const sectionsToHide = ['analytics-section', 'admin-section', 'users-section', 'settings-section'];
-                sectionsToHide.forEach(sectionId => {
-                    const element = document.getElementById(sectionId);
-                    if (element) element.classList.add('hidden');
-                });
+                // Hide all sections
+                document.getElementById('analytics-section').classList.add('hidden');
                 
-                // Show main content areas
-                const mainAreas = document.querySelectorAll('.main-content-area');
-                mainAreas.forEach(area => area.classList.remove('hidden'));
-                
-                // Handle specific sections
-                switch(section) {
-                    case 'overview':
-                        // Show main dashboard content (default view)
-                        console.log('📊 Showing overview dashboard');
-                        break;
-                        
-                    case 'items':
-                        // Focus on items grid and scroll to it
-                        const itemsContainer = document.getElementById('items-container');
-                        if (itemsContainer) {
-                            itemsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                        console.log('📦 Focusing on items grid');
-                        break;
-                        
-                    case 'analytics':
-                        document.getElementById('analytics-section').classList.remove('hidden');
-                        loadAnalytics();
-                        console.log('📈 Loading analytics dashboard');
-                        break;
-                        
-                    case 'settings':
-                        // TODO: Add settings section
-                        console.log('⚙️ Settings section (to be implemented)');
-                        alert('⚙️ Settings panel coming soon!');
-                        break;
-                        
-                    case 'admin':
-                        if (isAdmin) {
-                            // TODO: Add admin panel
-                            console.log('🔐 Admin panel (to be implemented)');
-                            alert('🔐 Admin panel coming soon!');
-                        } else {
-                            alert('❌ Access denied. Admin privileges required.');
-                        }
-                        break;
-                        
-                    case 'users':
-                        if (isAdmin) {
-                            // TODO: Add user management
-                            console.log('👥 User management (to be implemented)');
-                            alert('👥 User management panel coming soon!');
-                        } else {
-                            alert('❌ Access denied. Admin privileges required.');
-                        }
-                        break;
-                }
-                
-                // Close mobile menu after navigation (mobile only)
-                if (window.innerWidth < 768) {
-                    setTimeout(() => {
-                        const sidebar = document.getElementById('sidebar');
-                        const overlay = document.getElementById('mobile-menu-overlay');
-                        if (sidebar) sidebar.classList.add('-translate-x-full');
-                        if (overlay) overlay.classList.add('hidden');
-                        document.body.style.overflow = 'auto';
-                    }, 300); // Small delay for better UX
+                if (section === 'analytics') {
+                    document.getElementById('analytics-section').classList.remove('hidden');
+                    loadAnalytics();
                 }
             });
         });
