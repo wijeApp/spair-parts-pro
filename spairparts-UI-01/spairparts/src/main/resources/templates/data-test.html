@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spare Parts Data Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .item { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Spare Parts Data Retrieval Test</h1>
+        
+        <button onclick="testDatabaseConnection()">Test DB Connection</button>
+        <button onclick="fetchSparePartsData()">Fetch Spare Parts</button>
+        <button onclick="addTestItem()">Add Test Item</button>
+        
+        <div id="status"></div>
+        <div id="data"></div>
+    </div>
+
+    <script>
+        async function testDatabaseConnection() {
+            const status = document.getElementById('status');
+            const data = document.getElementById('data');
+            
+            try {
+                status.innerHTML = '<p>Testing database connection...</p>';
+                const response = await fetch('/api/test/db-connection');
+                const result = await response.json();
+                
+                status.innerHTML = `<p class="success">Database connection test completed!</p>`;
+                data.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                status.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function fetchSparePartsData() {
+            const status = document.getElementById('status');
+            const data = document.getElementById('data');
+            
+            try {
+                status.innerHTML = '<p>Fetching spare parts data...</p>';
+                const response = await fetch('/api/spareparts');
+                
+                if (response.ok) {
+                    const items = await response.json();
+                    status.innerHTML = `<p class="success">Found ${items.length} spare parts!</p>`;
+                    
+                    let html = '<h3>Spare Parts Data:</h3>';
+                    items.forEach(item => {
+                        html += `
+                            <div class="item">
+                                <h4>${item.name}</h4>
+                                <p><strong>Description:</strong> ${item.description || 'N/A'}</p>
+                                <p><strong>Price:</strong> $${item.price}</p>
+                                <p><strong>Quantity:</strong> ${item.quantity}</p>
+                                <p><strong>ID:</strong> ${item.id}</p>
+                                ${item.createdAt ? `<p><strong>Created:</strong> ${new Date(item.createdAt).toLocaleString()}</p>` : ''}
+                            </div>
+                        `;
+                    });
+                    data.innerHTML = html;
+                } else if (response.status === 401) {
+                    status.innerHTML = '<p class="error">Authentication required. Please login first.</p>';
+                    data.innerHTML = '<p>Go to <a href="/login">Login Page</a></p>';
+                } else {
+                    status.innerHTML = `<p class="error">Error: ${response.status} - ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                status.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function addTestItem() {
+            const status = document.getElementById('status');
+            
+            try {
+                status.innerHTML = '<p>Adding test item...</p>';
+                const response = await fetch('/api/test/create-sample');
+                const result = await response.json();
+                
+                if (result.status === 'SUCCESS') {
+                    status.innerHTML = '<p class="success">Test item added successfully!</p>';
+                    // Refresh the data
+                    fetchSparePartsData();
+                } else {
+                    status.innerHTML = `<p class="error">Failed to add item: ${result.error_message}</p>`;
+                }
+            } catch (error) {
+                status.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Auto-load data on page load
+        window.onload = function() {
+            testDatabaseConnection();
+        };
+    </script>
+</body>
+</html>

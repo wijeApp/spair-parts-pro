@@ -1,0 +1,55 @@
+-- =====================================================
+-- QUICK SETUP: Run this in MySQL Workbench or Command Line
+-- =====================================================
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS spareparts_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE spareparts_db;
+
+-- Step 2: Create spare_part_items table (matches your SparePartItem entity)
+CREATE TABLE IF NOT EXISTS spare_part_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT(1000),
+    price DECIMAL(10,2) NOT NULL,
+    quantity INT NOT NULL,
+    currency VARCHAR(10) DEFAULT 'LKR',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Step 3: Insert 5 sample spare parts
+INSERT INTO spare_part_items (name, description, price, quantity, currency) VALUES
+('Engine Oil Filter', 'High-quality oil filter for car engines', 2599.99, 50, 'LKR'),
+('Brake Pads Set', 'Ceramic brake pads for front wheels', 8999.99, 25, 'LKR'),
+('Air Filter', 'High-flow air filter for better performance', 1550.00, 100, 'LKR'),
+('Spark Plugs (Set of 4)', 'Premium iridium spark plugs', 4500.00, 75, 'LKR'),
+('Transmission Fluid', '1 liter premium transmission fluid', 3525.00, 30, 'LKR');
+
+-- Step 4: Create users table (for authentication)
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'USER',
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Step 5: Insert sample users
+INSERT INTO users (username, password, role) VALUES
+('admin', 'admin123', 'ADMIN'),
+('user', 'user123', 'USER');
+
+-- Step 6: Verify the setup
+SELECT 'Tables created:' as Status;
+SHOW TABLES;
+
+SELECT 'Spare parts data:' as Status;
+SELECT id, name, price, quantity FROM spare_part_items;
+
+SELECT 'Users data:' as Status;  
+SELECT id, username, role FROM users;
+
+SELECT 'Setup complete!' as Status;

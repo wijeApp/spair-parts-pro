@@ -125,12 +125,16 @@
                     <div class="mb-6 lg:mb-0">
                         <h1 class="text-4xl font-bold bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent mb-2">
                             Spare Parts Dashboard
-                        </h1>
-                        <div class="flex items-center gap-6 text-sm text-gray-600">
+                        </h1>                        <div class="flex items-center gap-6 text-sm text-gray-600">
                             <div class="bg-gray-100 px-4 py-2 rounded-full font-semibold">
                                 Welcome, <span id="username-display" th:text="${username ?: 'User'}">User</span>!
+                                <span th:if="${isAdmin}" class="ml-2 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">ADMIN</span>
                             </div>
                             <div>Last Updated: <span id="last-updated" class="font-semibold"></span></div>
+                            <div class="flex items-center gap-2">
+                                <div id="db-status" class="w-3 h-3 rounded-full bg-gray-400"></div>
+                                <span id="db-status-text" class="text-xs">Connecting...</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -209,13 +213,20 @@
                            min="0" 
                            required 
                            class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-success focus:ring-0 focus:outline-none transition-colors duration-300">
-                    
-                    <input type="number" 
+                      <input type="number" 
                            id="item-quantity" 
                            placeholder="Quantity" 
                            min="1" 
                            required 
                            class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-success focus:ring-0 focus:outline-none transition-colors duration-300">
+                    
+                    <select id="item-currency" 
+                            class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-success focus:ring-0 focus:outline-none transition-colors duration-300">
+                        <option value="LKR">LKR (Sri Lankan Rupee)</option>
+                        <option value="USD">USD (US Dollar)</option>
+                        <option value="EUR">EUR (Euro)</option>
+                        <option value="GBP">GBP (British Pound)</option>
+                    </select>
                     
                     <button type="submit" 
                             class="md:col-span-2 bg-gradient-to-r from-success to-green-600 hover:from-green-600 hover:to-success text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -270,18 +281,107 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <script>
-        async function fetchItems() {
+        </div>    </div>
+      <script>        // Store admin status from server
+        const isAdmin = [[${isAdmin}]] || false;
+        const currentUser = '[[${username}]]' || 'User';
+        const userRole = '[[${userRole}]]' || 'USER';
+        
+        // Admin status should no longer be forced as testing is complete
+        const isAdminForced = false;
+        
+        // Debug logging
+        console.log('🔒 Admin Status Debug:');
+        console.log('- isAdmin (from server):', isAdmin, '(type:', typeof isAdmin, ')');
+        console.log('- isAdminForced:', isAdminForced);
+        console.log('- currentUser:', currentUser);
+        console.log('- userRole:', userRole);
+        
+        // Add visual debug indicator to page
+        setTimeout(() => {
+            const debugDiv = document.createElement('div');
+            debugDiv.style.position = 'fixed';
+            debugDiv.style.top = '10px';
+            debugDiv.style.right = '10px';
+            debugDiv.style.backgroundColor = isAdminForced ? 'green' : 'red';
+            debugDiv.style.color = 'white';
+            debugDiv.style.padding = '10px';
+            debugDiv.style.borderRadius = '5px';
+            debugDiv.style.zIndex = '9999';
+            debugDiv.innerHTML = `DEBUG: isAdmin=${isAdmin}<br>User: ${currentUser}<br>Role: ${userRole}`;
+            document.body.appendChild(debugDiv);
+        }, 1000);
+        
+        // Add debug logging for database connectivity
+        console.log('Dashboard initialized - connecting to MySQL database...');
+          async function fetchItems() {
             try {
+                console.log('Fetching items from MySQL database...');
+                updateDatabaseStatus('connecting', 'Connecting...');
+                
                 const res = await fetch('/api/spareparts');
-                return res.ok ? res.json() : [];
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log(`Successfully loaded ${data.length} items from database:`, data);
+                    updateDatabaseStatus('connected', `MySQL Connected (${data.length} items)`);
+                    return data;
+                } else {
+                    console.error('Failed to fetch items - HTTP Status:', res.status);
+                    updateDatabaseStatus('error', `HTTP ${res.status} Error`);
+                    showDatabaseError(`HTTP ${res.status}: ${res.statusText}`);
+                    return [];
+                }
             } catch (error) {
-                console.error('Failed to fetch items:', error);
+                console.error('Failed to fetch items - Network/Database error:', error);
+                updateDatabaseStatus('error', 'Connection Failed');
+                showDatabaseError(error.message);
                 return [];
             }
+        }
+        
+        function updateDatabaseStatus(status, text) {
+            const statusDot = document.getElementById('db-status');
+            const statusText = document.getElementById('db-status-text');
+            
+            statusText.textContent = text;
+            
+            switch(status) {
+                case 'connected':
+                    statusDot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+                    break;
+                case 'connecting':
+                    statusDot.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse';
+                    break;
+                case 'error':
+                    statusDot.className = 'w-3 h-3 rounded-full bg-red-500 animate-pulse';
+                    break;
+                default:
+                    statusDot.className = 'w-3 h-3 rounded-full bg-gray-400';
+            }
+        }
+        
+        function showDatabaseError(errorMessage) {
+            const container = document.getElementById('items-container');
+            container.innerHTML = `
+                <div class="col-span-full bg-red-50 border-2 border-red-200 rounded-xl p-8 text-center">
+                    <div class="text-red-600 text-6xl mb-4">⚠️</div>
+                    <h3 class="text-xl font-bold text-red-800 mb-2">Database Connection Error</h3>
+                    <p class="text-red-600 mb-4">${errorMessage}</p>
+                    <div class="text-sm text-red-500">
+                        <p>Possible causes:</p>
+                        <ul class="list-disc list-inside mt-2">
+                            <li>MySQL server is not running</li>
+                            <li>Database 'spairparts_db' doesn't exist</li>
+                            <li>Connection credentials are incorrect</li>
+                            <li>Application backend is not started</li>
+                        </ul>
+                    </div>
+                    <button onclick="location.reload()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        🔄 Retry Connection
+                    </button>
+                </div>
+            `;
         }
         
         function updateStats(items) {
@@ -313,55 +413,101 @@
                 itemsContainer.parentNode.insertBefore(message, itemsContainer);
             }
         }
-        
-        // Enhanced render function with animations
+          // Enhanced render function with animations
         function renderItems(items) {
             const container = document.getElementById('items-container');
             container.innerHTML = '';
             
-            items.forEach((item, index) => {
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-blue-50 border-2 border-blue-200 rounded-xl p-8 text-center">
+                        <div class="text-blue-600 text-6xl mb-4">📦</div>
+                        <h3 class="text-xl font-bold text-blue-800 mb-2">No Items Found</h3>
+                        <p class="text-blue-600 mb-4">The database is empty or no items match your search.</p>
+                        <p class="text-sm text-blue-500">Add some items using the form below to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+              items.forEach((item, index) => {
                 const itemCard = document.createElement('div');
                 itemCard.className = 'bg-white rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl fade-in';
-                itemCard.style.animationDelay = `${index * 0.1}s`;
-                itemCard.innerHTML = `
+                itemCard.style.animationDelay = `${index * 0.1}s`;                // Create admin buttons (update and delete) - only visible for admins
+                const updateButtonHtml = isAdmin ? `
+                    <button onclick="openUpdateModal(${item.id}, '${item.name}', '${item.description}', ${item.price}, ${item.quantity}, '${item.currency || 'LKR'}')" 
+                            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105 mr-2">
+                        ✏️ Update
+                    </button>
+                ` : '';
+                
+                const deleteButtonHtml = isAdmin ? `
+                    <button onclick="deleteItem(${item.id}, '${item.name}')" 
+                            class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105">
+                        🗑️ Delete
+                    </button>
+                ` : '';
+                
+                // Debug logging for button visibility
+                console.log(`Item ${item.id}: isAdmin=${isAdmin}, updateButton=${updateButtonHtml ? 'VISIBLE' : 'HIDDEN'}, deleteButton=${deleteButtonHtml ? 'VISIBLE' : 'HIDDEN'}`);
+                  itemCard.innerHTML = `
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="text-xl font-bold text-secondary item-name">${item.name}</h3>
-                        <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold item-id">ID: ${item.id}</span>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold item-id">ID: ${item.id}</span>
+                            <div class="ml-2 flex items-center">
+                                ${updateButtonHtml}
+                                ${deleteButtonHtml}
+                            </div>
+                        </div>
                     </div>
                     <p class="text-gray-600 mb-4 item-description">${item.description}</p>
                     <div class="flex justify-between items-center">
                         <div class="text-2xl font-bold bg-gradient-to-r from-success to-green-600 bg-clip-text text-transparent">
-                            ${item.price.toFixed(2)}
+                            ${item.price.toFixed(2)} ${item.currency || 'LKR'}
                         </div>
                         <div class="px-4 py-2 rounded-full text-sm font-bold ${item.quantity < 10 ? 'bg-gradient-to-r from-accent to-red-600 text-white animate-pulse-glow' : 'bg-gradient-to-r from-primary to-blue-600 text-white'}">
                             Qty: ${item.quantity}
                         </div>
                     </div>
+                    <div class="mt-3 text-xs text-gray-400">
+                        DB ID: ${item.id} | Currency: ${item.currency || 'LKR'} ${isAdmin ? '| Role: ' + userRole : ''}
+                    </div>
                 `;
                 container.appendChild(itemCard);
             });
         }
-        
-        async function loadDashboard() {
+          async function loadDashboard() {
+            console.log('Loading dashboard data from MySQL...');
             const items = await fetchItems();
             updateStats(items);
             renderItems(items);
             document.getElementById('last-updated').textContent = new Date().toLocaleString();
+            
+            // Test database connection
+            try {
+                const dbStatus = await fetch('/api/test/db-connection');
+                if (dbStatus.ok) {
+                    const statusData = await dbStatus.json();
+                    console.log('Database connection test:', statusData);
+                    updateDatabaseStatus('connected', `MySQL Connected (${statusData.totalRecords || 0} items)`);
+                }
+            } catch (error) {
+                console.warn('Database status check failed:', error);
+            }
         }
         
         // Load dashboard on page load
         loadDashboard();
         
         // Refresh every 30 seconds
-        setInterval(loadDashboard, 30000);
-
-        // Add item form submission
+        setInterval(loadDashboard, 30000);        // Add item form submission
         document.getElementById('add-item-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('item-name').value.trim();
             const description = document.getElementById('item-description').value.trim();
             const price = parseFloat(document.getElementById('item-price').value);
             const quantity = parseInt(document.getElementById('item-quantity').value);
+            const currency = document.getElementById('item-currency').value;
 
             // Validation
             if (!name || !description) {
@@ -377,9 +523,10 @@
                 return;
             }
 
-            const newItem = { name, description, price, quantity };
+            const newItem = { name, description, price, quantity, currency };
             
             try {
+                console.log('Adding new item to MySQL database:', newItem);
                 const response = await fetch('/api/spareparts', {
                     method: 'POST',
                     headers: {
@@ -389,15 +536,19 @@
                 });
 
                 if (response.ok) {
-                    alert('✅ Item added successfully to stock!');
+                    const savedItem = await response.json();
+                    console.log('Item successfully saved to database:', savedItem);
+                    alert(`✅ Item "${name}" added successfully to MySQL database!\nDB ID: ${savedItem.id}`);
                     document.getElementById('add-item-form').reset();
                     loadDashboard(); // Refresh the dashboard
                 } else {
-                    alert('❌ Failed to add item. Please try again.');
+                    const errorText = await response.text();
+                    console.error('Failed to save item:', errorText);
+                    alert(`❌ Failed to add item to database. Server error: ${response.status}`);
                 }
             } catch (error) {
                 console.error('Error adding item:', error);
-                alert('🚨 An error occurred. Please try again.');
+                alert('🚨 Database connection error. Please check if MySQL is running.');
             }
         });
 
@@ -672,6 +823,167 @@
                 // Debounce the search to avoid too many calls
                 clearTimeout(this.searchTimeout);
                 this.searchTimeout = setTimeout(performSearch, 300);
+            });        });        // Delete item functionality (admin only)
+        async function deleteItem(itemId, itemName) {
+            console.log(`🗑️ Delete requested: Item ${itemId} (${itemName}), isAdmin=${isAdmin}`);
+            
+            if (!isAdmin) {
+                alert('❌ Access denied. Only administrators can delete items.');
+                return;
+            }
+
+            if (!confirm(`🗑️ Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                console.log(`Calling DELETE API: /api/spareparts/${itemId}`);
+                
+                const response = await fetch(`/api/spareparts/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log(`API Response: ${response.status} ${response.statusText}`);
+
+                if (response.ok) {
+                    const message = await response.text();
+                    console.log('✅ Delete successful:', message);
+                    alert(`✅ "${itemName}" has been deleted successfully!`);
+                    loadDashboard(); // Refresh the dashboard
+                } else if (response.status === 403) {
+                    const errorMessage = await response.text();
+                    console.error('❌ 403 Forbidden:', errorMessage);
+                    alert(`❌ Access denied: ${errorMessage}`);
+                } else if (response.status === 401) {
+                    console.error('❌ 401 Unauthorized');
+                    alert('❌ Authentication required. Please login again.');
+                    window.location.href = '/login';
+                } else if (response.status === 404) {
+                    console.error('❌ 404 Not Found');
+                    alert('❌ Item not found. It may have already been deleted.');
+                    loadDashboard(); // Refresh to update the view
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Server error:', errorText);
+                    alert(`❌ Failed to delete item. Server error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('🚨 Network error:', error);
+                alert('🚨 Network error. Please check your connection and try again.');
+            }        }
+
+        // Update item functionality (admin only)
+        function openUpdateModal(itemId, itemName, itemDescription, itemPrice, itemQuantity, itemCurrency) {
+            console.log(`✏️ Update requested: Item ${itemId} (${itemName}), isAdmin=${isAdmin}`);
+            
+            if (!isAdmin) {
+                alert('❌ Access denied. Only administrators can update items.');
+                return;
+            }
+
+            // Populate the modal with current values
+            document.getElementById('update-item-id').value = itemId;
+            document.getElementById('update-item-name').value = itemName;
+            document.getElementById('update-item-description').value = itemDescription;
+            document.getElementById('update-item-price').value = itemPrice;
+            document.getElementById('update-item-quantity').value = itemQuantity;
+            document.getElementById('update-item-currency').value = itemCurrency;
+
+            // Show the modal
+            document.getElementById('updateModal').classList.remove('hidden');
+        }
+
+        function closeUpdateModal() {
+            document.getElementById('updateModal').classList.add('hidden');
+            // Clear the form
+            document.getElementById('update-item-form').reset();
+        }
+
+        async function updateItem(itemId, updatedData) {
+            console.log(`🔄 Updating item ${itemId}:`, updatedData);
+
+            if (!isAdmin) {
+                alert('❌ Access denied. Only administrators can update items.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/spareparts/${itemId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                console.log(`API Response: ${response.status} ${response.statusText}`);
+
+                if (response.ok) {
+                    const updatedItem = await response.json();
+                    console.log('✅ Update successful:', updatedItem);
+                    alert(`✅ "${updatedData.name}" has been updated successfully!`);
+                    closeUpdateModal();
+                    loadDashboard(); // Refresh the dashboard
+                } else if (response.status === 403) {
+                    const errorMessage = await response.text();
+                    console.error('❌ 403 Forbidden:', errorMessage);
+                    alert(`❌ Access denied: ${errorMessage}`);
+                } else if (response.status === 401) {
+                    console.error('❌ 401 Unauthorized');
+                    alert('❌ Authentication required. Please login again.');
+                    window.location.href = '/login';
+                } else if (response.status === 404) {
+                    console.error('❌ 404 Not Found');
+                    alert('❌ Item not found. It may have been deleted.');
+                    closeUpdateModal();
+                    loadDashboard(); // Refresh to update the view
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Server error:', errorText);
+                    alert(`❌ Failed to update item. Server error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('🚨 Network error:', error);
+                alert('🚨 Network error. Please check your connection and try again.');
+            }
+        }
+
+        // Update form submission handler
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('update-item-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const itemId = document.getElementById('update-item-id').value;
+                const updatedData = {
+                    name: document.getElementById('update-item-name').value.trim(),
+                    description: document.getElementById('update-item-description').value.trim(),
+                    price: parseFloat(document.getElementById('update-item-price').value),
+                    quantity: parseInt(document.getElementById('update-item-quantity').value),
+                    currency: document.getElementById('update-item-currency').value
+                };
+
+                // Validate the data
+                if (!updatedData.name || !updatedData.description || isNaN(updatedData.price) || isNaN(updatedData.quantity)) {
+                    alert('❌ Please fill in all fields with valid values.');
+                    return;
+                }
+
+                if (updatedData.price < 0 || updatedData.quantity < 0) {
+                    alert('❌ Price and quantity must be non-negative.');
+                    return;
+                }
+
+                await updateItem(itemId, updatedData);
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('updateModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeUpdateModal();
+                }
             });
         });
 
@@ -695,8 +1007,68 @@
                 
                 document.body.appendChild(form);
                 form.submit();
-            }
-        }
+            }        }
     </script>
+
+    <!-- Update Item Modal -->
+    <div id="updateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-secondary">✏️ Update Spare Part</h2>
+                <button onclick="closeUpdateModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">×</button>
+            </div>
+            
+            <form id="update-item-form" class="space-y-4">
+                <input type="hidden" id="update-item-id">
+                
+                <input type="text" 
+                       id="update-item-name" 
+                       placeholder="Item Name" 
+                       required 
+                       class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 focus:outline-none transition-colors duration-300">
+                
+                <textarea id="update-item-description" 
+                         placeholder="Item Description" 
+                         required 
+                         rows="3"
+                         class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 focus:outline-none transition-colors duration-300"></textarea>
+                
+                <input type="number" 
+                       id="update-item-price" 
+                       placeholder="Price" 
+                       step="0.01" 
+                       min="0" 
+                       required 
+                       class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 focus:outline-none transition-colors duration-300">
+                       
+                <input type="number" 
+                       id="update-item-quantity" 
+                       placeholder="Quantity" 
+                       min="0" 
+                       required 
+                       class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 focus:outline-none transition-colors duration-300">
+                
+                <select id="update-item-currency" 
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 focus:outline-none transition-colors duration-300">
+                    <option value="LKR">LKR (Sri Lankan Rupee)</option>
+                    <option value="USD">USD (US Dollar)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="GBP">GBP (British Pound)</option>
+                </select>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" 
+                            onclick="closeUpdateModal()"
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-xl font-bold transition-colors duration-300">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105">
+                        Update Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

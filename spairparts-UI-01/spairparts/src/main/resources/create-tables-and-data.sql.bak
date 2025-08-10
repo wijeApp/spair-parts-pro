@@ -1,0 +1,158 @@
+-- =======================================================
+-- MySQL Setup Script for Spare Parts Management System
+-- =======================================================
+
+-- Create database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS spareparts_db 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
+
+-- Use the database
+USE spareparts_db;
+
+-- Create user if it doesn't exist (optional - you can use root)
+CREATE USER IF NOT EXISTS 'spareparts_user'@'localhost' IDENTIFIED BY 'spareparts_password';
+GRANT ALL PRIVILEGES ON spareparts_db.* TO 'spareparts_user'@'localhost';
+FLUSH PRIVILEGES;
+
+-- =======================================================
+-- CREATE TABLES
+-- =======================================================
+
+-- Drop tables if they exist (for fresh setup)
+DROP TABLE IF EXISTS spare_part_items;
+DROP TABLE IF EXISTS users;
+
+-- Create spare_part_items table based on SparePartItem entity
+CREATE TABLE spare_part_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT(1000),
+    price DECIMAL(10,2) NOT NULL,
+    quantity INT NOT NULL,
+    currency VARCHAR(10) DEFAULT 'LKR',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_name (name),
+    INDEX idx_quantity (quantity),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create users table for authentication
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'USER',
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_username (username),
+    INDEX idx_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =======================================================
+-- INSERT SAMPLE DATA FOR SPARE PART ITEMS
+-- =======================================================
+
+INSERT INTO spare_part_items (name, description, price, quantity, currency, created_at, updated_at) VALUES
+('Engine Oil Filter', 'High-quality oil filter for car engines - Compatible with most vehicle models including Toyota, Honda, Nissan. Ensures clean oil circulation and engine protection.', 2599.99, 50, 'LKR', NOW(), NOW()),
+
+('Brake Pads Set (Front)', 'Premium ceramic brake pads for front wheels - Enhanced stopping power with reduced noise and dust. Suitable for sedans and SUVs.', 8999.99, 25, 'LKR', NOW(), NOW()),
+
+('Air Filter', 'High-flow air filter for better engine performance and fuel efficiency - Washable and reusable design. Improves airflow by up to 20%.', 1550.00, 100, 'LKR', NOW(), NOW()),
+
+('Spark Plugs (Set of 4)', 'Premium iridium spark plugs for enhanced engine performance - Long-lasting with superior ignition. Reduces emissions and improves fuel economy.', 4500.00, 75, 'LKR', NOW(), NOW()),
+
+('Transmission Fluid (1L)', '1 liter premium automatic transmission fluid for smooth gear shifting - Synthetic blend formula. Compatible with most automatic transmissions.', 3525.00, 30, 'LKR', NOW(), NOW());
+
+-- =======================================================
+-- INSERT ADDITIONAL SAMPLE DATA (Optional)
+-- =======================================================
+
+INSERT INTO spare_part_items (name, description, price, quantity, currency, created_at, updated_at) VALUES
+('Windshield Wipers (Pair)', 'All-weather windshield wiper blades with aerodynamic design - Set of 2 pieces. Superior water clearance in all conditions.', 1200.00, 60, 'LKR', NOW(), NOW()),
+
+('Car Battery 12V', '12V maintenance-free car battery with 3-year warranty - 70Ah capacity. Reliable starting power in all weather conditions.', 15000.00, 15, 'LKR', NOW(), NOW()),
+
+('LED Headlight Bulbs', 'LED headlight bulbs with bright white light - Energy efficient 6000K color temperature. 50% brighter than halogen bulbs.', 2800.00, 40, 'LKR', NOW(), NOW()),
+
+('Radiator Coolant (2L)', '2 liter radiator coolant concentrate for engine cooling - Prevents overheating and corrosion. Mixed with water for optimal performance.', 1850.00, 35, 'LKR', NOW(), NOW()),
+
+('Timing Belt', 'Durable timing belt for precise engine timing - High-strength rubber construction. Prevents engine damage from timing issues.', 6500.00, 20, 'LKR', NOW(), NOW());
+
+-- =======================================================
+-- INSERT SAMPLE USER DATA
+-- =======================================================
+
+-- Note: Password should be encrypted in real application
+-- For demo purposes, using plain text (Spring Security will handle encryption)
+INSERT INTO users (username, password, role, enabled, created_at, updated_at) VALUES
+('admin', 'admin123', 'ADMIN', TRUE, NOW(), NOW()),
+('manager', 'manager123', 'MANAGER', TRUE, NOW(), NOW()),
+('user', 'user123', 'USER', TRUE, NOW(), NOW());
+
+-- =======================================================
+-- VERIFY DATA INSERTION
+-- =======================================================
+
+-- Check the inserted data
+SELECT 'Spare Part Items Count:' as Info, COUNT(*) as Count FROM spare_part_items
+UNION ALL
+SELECT 'Users Count:' as Info, COUNT(*) as Count FROM users;
+
+-- Display all spare parts
+SELECT 
+    id,
+    name,
+    price,
+    quantity,
+    currency,
+    created_at
+FROM spare_part_items 
+ORDER BY created_at DESC;
+
+-- Display all users
+SELECT 
+    id,
+    username,
+    role,
+    enabled,
+    created_at
+FROM users 
+ORDER BY created_at DESC;
+
+-- =======================================================
+-- USEFUL QUERIES FOR TESTING
+-- =======================================================
+
+-- Check low stock items (quantity < 30)
+SELECT name, quantity, price 
+FROM spare_part_items 
+WHERE quantity < 30 
+ORDER BY quantity ASC;
+
+-- Calculate total inventory value
+SELECT 
+    COUNT(*) as total_items,
+    SUM(price * quantity) as total_value,
+    AVG(price) as average_price
+FROM spare_part_items;
+
+-- Show items by price range
+SELECT name, price, quantity 
+FROM spare_part_items 
+WHERE price BETWEEN 1000 AND 5000 
+ORDER BY price DESC;
+
+COMMIT;
+
+-- =======================================================
+-- SETUP COMPLETE MESSAGE
+-- =======================================================
+SELECT '==============================================';
+SELECT 'MySQL Database Setup Complete!';
+SELECT 'Database: spareparts_db';
+SELECT 'Tables: spare_part_items, users';
+SELECT 'Sample Data: 10 spare parts, 3 users';
+SELECT '==============================================';

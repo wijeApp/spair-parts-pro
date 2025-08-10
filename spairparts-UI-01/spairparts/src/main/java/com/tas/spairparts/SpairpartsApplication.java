@@ -33,8 +33,20 @@ public class SpairpartsApplication implements CommandLineRunner {
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRole("ADMIN");
+            admin.setEnabled(true);
             userRepository.save(admin);
             System.out.println("Default admin user created: admin/admin123");
+        }
+        
+        // Create Admin user with administrator access if not exists
+        if (userRepository.findByUsername("Admin").isEmpty()) {
+            User adminUser = new User();
+            adminUser.setUsername("Admin");
+            adminUser.setPassword(passwordEncoder.encode("Admin123"));
+            adminUser.setRole("ADMIN");
+            adminUser.setEnabled(true);
+            userRepository.save(adminUser);
+            System.out.println("Administrator user created: Admin/Admin123");
         }
         
         // Create default user if not exists

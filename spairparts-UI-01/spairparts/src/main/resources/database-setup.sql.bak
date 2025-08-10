@@ -1,0 +1,33 @@
+-- MySQL Database Setup Script for Spare Parts Application
+-- Run this script to create the database and user
+
+-- Create the database
+CREATE DATABASE IF NOT EXISTS spareparts_db 
+CHARACTER SET utf8mb4 
+COLLATE utf8mb4_unicode_ci;
+
+-- Create a user for the application (optional, you can use root)
+CREATE USER IF NOT EXISTS 'spareparts_user'@'localhost' IDENTIFIED BY 'spareparts_password';
+
+-- Grant privileges to the user
+GRANT ALL PRIVILEGES ON spareparts_db.* TO 'spareparts_user'@'localhost';
+
+-- Flush privileges to make sure they take effect
+FLUSH PRIVILEGES;
+
+-- Use the database
+USE spareparts_db;
+
+-- The tables will be automatically created by Hibernate/JPA
+-- But you can run this to verify the structure:
+-- SHOW TABLES;
+-- DESCRIBE spare_part_items;
+-- DESCRIBE users;
+
+-- Optional: Insert some sample data
+-- INSERT INTO spare_part_items (name, description, price, quantity, currency, created_at, updated_at) VALUES
+-- ('Engine Oil Filter', 'High-quality oil filter for car engines', 25.99, 50, 'LKR', NOW(), NOW()),
+-- ('Brake Pads', 'Ceramic brake pads for front wheels', 89.99, 25, 'LKR', NOW(), NOW()),
+-- ('Air Filter', 'Air filter for better engine performance', 15.50, 100, 'LKR', NOW(), NOW()),
+-- ('Spark Plugs', 'Iridium spark plugs set of 4', 45.00, 75, 'LKR', NOW(), NOW()),
+-- ('Transmission Fluid', '1 liter transmission fluid bottle', 35.25, 30, 'LKR', NOW(), NOW());

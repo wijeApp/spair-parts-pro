@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Debug Information</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .info { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .current-user { background: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 User Debug Information</h1>
+        
+        <div class="current-user">
+            <strong>Current Authenticated User:</strong> <span th:text="${currentUser}">None</span>
+        </div>
+        
+        <div class="info">
+            <h3>User Database Information:</h3>
+            <pre th:text="${userDebugInfo}">Loading...</pre>
+        </div>
+        
+        <div>
+            <h3>Quick Actions:</h3>
+            <a href="/dashboard" style="background: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; margin-right: 10px;">Go to Dashboard</a>
+            <a href="/login" style="background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Login Page</a>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 12px; color: #666;">
+            <p><strong>Expected Admin User:</strong> username=admin, role=ADMIN</p>
+            <p><strong>Expected Regular User:</strong> username=user, role=USER</p>
+        </div>
+    </div>
+</body>
+</html>
