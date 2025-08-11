@@ -21,7 +21,11 @@ public class SparePartItem {    @Id
     private Integer quantity;
     
     @Column(length = 10)
-    private String currency;    public SparePartItem() {}
+    private String currency;
+    
+    // New field for image path
+    @Column(length = 255)
+    private String imagePath;    public SparePartItem() {}
 
     public SparePartItem(String name, String description, Double price, Integer quantity) {
         this.name = name;
@@ -39,6 +43,16 @@ public class SparePartItem {    @Id
         this.quantity = quantity;
         this.currency = currency;
     }
+    
+    // Constructor with image path
+    public SparePartItem(String name, String description, Double price, Integer quantity, String imagePath) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.quantity = quantity;
+        this.currency = "LKR";
+        this.imagePath = imagePath;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -52,4 +66,6 @@ public class SparePartItem {    @Id
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 }

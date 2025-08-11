@@ -74,15 +74,64 @@
             border-radius: 3px;
             font-weight: bold;
         }
-        
-        /* Custom animations for the dashboard */
+          /* Custom animations for the dashboard */
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
         
         .slide-in {
             animation: slideIn 0.3s ease-out;
-        }    </style>
+        }
+
+        /* Mobile responsiveness improvements */
+        @media (max-width: 768px) {
+            .items-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-text {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .button-group button {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        /* Image upload styles */
+        .image-upload-area {
+            transition: all 0.3s ease;
+        }
+        
+        .image-upload-area:hover {
+            border-color: #3498db;
+            background-color: #f8fafc;
+        }
+
+        /* Loading spinner */
+        .loading::after {
+            border-color: #3498db transparent #3498db transparent;
+        }</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600">
     <!-- Mobile Menu Button -->
@@ -134,12 +183,11 @@
                             <span>📊</span>
                             <span class="font-medium">Overview</span>
                         </div>
-                    </div>
-                    <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="items">
+                    </div>                    <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="items">
                         <div class="flex items-center space-x-3">
                             <span>📦</span>
                             <span class="font-medium">Items</span>
-                            <span id="items-count-badge" class="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">0</span>
+                            <span id="items-count-badge" class="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">...</span>
                         </div>
                     </div>
                     <div class="nav-item px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 hover:bg-gray-700 hover:scale-105" data-section="analytics">
@@ -207,7 +255,7 @@
             <div class="bg-white rounded-2xl p-4 md:p-8 mb-6 md:mb-8 shadow-xl border border-white/50">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                     <div class="mb-6 lg:mb-0">
-                        <h1 class="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent mb-2">
+                        <h1 class="header-text text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent mb-2">
                             Spare Parts Dashboard
                         </h1>
                         <div class="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-gray-600">
@@ -229,7 +277,7 @@
                                placeholder="🔍 Search items by name, description, or ID..."
                                class="px-4 md:px-6 py-3 border-2 border-gray-200 rounded-full focus:border-primary focus:ring-0 focus:outline-none transition-all duration-300 text-sm w-full sm:w-80">
                         
-                        <div class="flex gap-2">
+                        <div class="button-group flex flex-col sm:flex-row gap-2">
                             <button id="search-button" 
                                     class="bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-primary text-white px-4 md:px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm">
                                 🔍 <span class="hidden sm:inline">Search</span>
@@ -248,39 +296,98 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <!-- Stats Grid -->            <div class="stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8" id="stats-section">
                 <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                     <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Total Items</h3>
-                    <div class="text-4xl font-black bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent" id="total-items">0</div>
+                    <div class="text-4xl font-black bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent" id="total-items">...</div>
                 </div>
                 <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                     <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Total Value</h3>
-                    <div class="text-4xl font-black bg-gradient-to-r from-success to-green-600 bg-clip-text text-transparent" id="total-value">0</div>
+                    <div class="text-4xl font-black bg-gradient-to-r from-success to-green-600 bg-clip-text text-transparent" id="total-value">...</div>
                 </div>
                 <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                     <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Low Stock Items</h3>
-                    <div class="text-4xl font-black bg-gradient-to-r from-accent to-red-600 bg-clip-text text-transparent" id="low-stock">0</div>
+                    <div class="text-4xl font-black bg-gradient-to-r from-accent to-red-600 bg-clip-text text-transparent" id="low-stock">...</div>
                 </div>
                 <div class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                     <h3 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">Average Price</h3>
-                    <div class="text-4xl font-black bg-gradient-to-r from-warning to-yellow-600 bg-clip-text text-transparent" id="avg-price">0</div>
+                    <div class="text-4xl font-black bg-gradient-to-r from-warning to-yellow-600 bg-clip-text text-transparent" id="avg-price">...</div>
                 </div>
             </div>
             
             <!-- Search Results Message -->
-            <div id="search-results-container"></div>
-            
-            <!-- Items Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="items-container">
-                <!-- Items will be rendered here -->
+            <div id="search-results-container"></div>              <!-- Items Grid -->
+            <div class="items-container grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8" id="items-container">
+                <div th:each="item : ${spareparts}" class="bg-white rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-bold text-secondary item-name" th:text="${item.name}">Item Name</h3>
+                        <div class="flex items-center">
+                            <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold item-id" th:text="'ID: ' + ${item.id}">ID: 0</span>                            <div class="ml-2 flex items-center" th:if="${isAdmin}">
+                                <button th:data-item-id="${item.id}"
+                                        th:data-item-name="${item.name}"
+                                        th:data-item-description="${item.description}"
+                                        th:data-item-price="${item.price}"
+                                        th:data-item-quantity="${item.quantity}"
+                                        th:data-item-currency="${item.currency ?: 'USD'}"
+                                        th:data-item-image-path="${item.imagePath ?: ''}"
+                                        onclick="openUpdateModalFromData(this)"
+                                        class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105 mr-2">
+                                    ✏️ Update
+                                </button>
+                                <button th:data-item-id="${item.id}"
+                                        th:data-item-name="${item.name}"
+                                        onclick="deleteItemFromData(this)"
+                                        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Image Display -->
+                    <div class="mb-4 flex justify-center">
+                        <div th:if="${item.imagePath != null and item.imagePath != ''}" class="relative">
+                            <img th:src="@{'/uploads/' + ${item.imagePath}}" 
+                                 th:alt="${item.name}"
+                                 class="w-full h-48 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                                 onerror="this.parentElement.innerHTML='<div class=\'w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center\'><span class=\'text-gray-500\'>📦 No Image</span></div>'">
+                        </div>
+                        <div th:unless="${item.imagePath != null and item.imagePath != ''}" 
+                             class="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
+                            <span class="text-gray-500 text-lg">📦 No Image</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-600 mb-4 item-description" th:text="${item.description}">Item description</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gradient-to-r from-success to-green-600 text-white p-3 rounded-xl text-center">
+                            <div class="text-xs font-semibold opacity-90">💰 Price</div>
+                            <div class="text-lg font-bold item-price" th:text="${item.currency ?: 'USD'} + ' ' + ${#numbers.formatDecimal(item.price, 1, 2)}">$0.00</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-3 rounded-xl text-center">
+                            <div class="text-xs font-semibold opacity-90">📦 Stock</div>
+                            <div class="text-lg font-bold item-quantity" th:text="${item.quantity}">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-500">Available in Stock</span>
+                        <div class="flex items-center">
+                            <div th:if="${item.quantity > 10}" class="h-2 w-2 bg-success rounded-full mr-2"></div>
+                            <div th:if="${item.quantity <= 10 and item.quantity > 0}" class="h-2 w-2 bg-warning rounded-full mr-2"></div>
+                            <div th:if="${item.quantity <= 0}" class="h-2 w-2 bg-accent rounded-full mr-2"></div>
+                            <span th:if="${item.quantity > 10}" class="text-xs font-semibold text-success">In Stock</span>
+                            <span th:if="${item.quantity <= 10 and item.quantity > 0}" class="text-xs font-semibold text-warning">Low Stock</span>
+                            <span th:if="${item.quantity <= 0}" class="text-xs font-semibold text-accent">Out of Stock</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <!-- Add Item Form -->
-            <div class="bg-white rounded-2xl p-8 shadow-xl border border-white/50 mb-8">
+            <!-- Add Item Form -->            <div class="bg-white rounded-2xl p-8 shadow-xl border border-white/50 mb-8">
                 <h2 class="text-2xl font-bold text-center text-secondary mb-8">📦 Add New Item to Stock</h2>
-                <form id="add-item-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form id="add-item-form" class="form-grid grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" enctype="multipart/form-data">
                     <input type="text" 
                            id="item-name" 
                            placeholder="Item Name" 
@@ -314,6 +421,27 @@
                         <option value="EUR">EUR (Euro)</option>
                         <option value="GBP">GBP (British Pound)</option>
                     </select>
+                    
+                    <!-- Image Upload Section -->
+                    <div class="md:col-span-2">
+                        <label for="item-image" class="block text-sm font-medium text-gray-700 mb-2">📷 Item Image (Optional)</label>
+                        <div class="flex items-center justify-center w-full">
+                            <label for="item-image" class="image-upload-area flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                    </svg>
+                                    <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                    <p class="text-xs text-gray-500">PNG, JPG or GIF (MAX. 5MB)</p>
+                                </div>
+                                <input id="item-image" type="file" class="hidden" accept="image/*" />
+                            </label>
+                        </div>
+                        <div id="image-preview" class="mt-4 hidden">
+                            <img id="preview-img" src="" alt="Preview" class="max-w-full h-32 object-cover rounded-lg border-2 border-gray-200">
+                            <button type="button" onclick="clearImagePreview()" class="mt-2 text-sm text-red-600 hover:text-red-800">Remove Image</button>
+                        </div>
+                    </div>
                     
                     <button type="submit" 
                             class="md:col-span-2 bg-gradient-to-r from-success to-green-600 hover:from-green-600 hover:to-success text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -369,829 +497,43 @@
                 </div>
             </div>
         </div>    </div>
-      <script>        // Store admin status from server
-        const isAdmin = [[${isAdmin}]] || false;
-        const currentUser = '[[${username}]]' || 'User';
-        const userRole = '[[${userRole}]]' || 'USER';
-        
-        // Admin status should no longer be forced as testing is complete
-        const isAdminForced = false;
-        
-        // Debug logging
-        console.log('🔒 Admin Status Debug:');
-        console.log('- isAdmin (from server):', isAdmin, '(type:', typeof isAdmin, ')');
-        console.log('- isAdminForced:', isAdminForced);
-        console.log('- currentUser:', currentUser);
-        console.log('- userRole:', userRole);
-          // Add visual debug indicator to page (bottom left)
-        setTimeout(() => {
-            const debugDiv = document.createElement('div');
-            debugDiv.style.position = 'fixed';
-            debugDiv.style.bottom = '20px';
-            debugDiv.style.left = '20px';
-            debugDiv.style.backgroundColor = isAdminForced ? 'green' : (isAdmin ? 'blue' : 'red');
-            debugDiv.style.color = 'white';
-            debugDiv.style.padding = '12px';
-            debugDiv.style.borderRadius = '8px';
-            debugDiv.style.zIndex = '9999';
-            debugDiv.style.fontSize = '12px';
-            debugDiv.style.fontFamily = 'monospace';
-            debugDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-            debugDiv.style.border = '2px solid rgba(255,255,255,0.2)';
-            debugDiv.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 4px;">🔍 DEBUG INFO</div>
-                <div>Admin: ${isAdmin ? '✅' : '❌'} (${isAdmin})</div>
-                <div>User: ${currentUser}</div>
-                <div>Role: ${userRole}</div>
-                <div style="margin-top: 4px; font-size: 10px; opacity: 0.8;">
-                    ${new Date().toLocaleTimeString()}
-                </div>
-            `;
-            document.body.appendChild(debugDiv);
-        }, 1000);
-        
-        // Mobile Menu Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeMobileMenu();
-            initializeQuickActions();
-            updateItemsCount();
-        });
-
-        function initializeMobileMenu() {
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-menu-overlay');
-            const closeMobileMenu = document.getElementById('close-mobile-menu');
-
-            function openMobileMenu() {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-                console.log('📱 Mobile menu opened');
-            }
-
-            function closeMobileMenuFunc() {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-                document.body.style.overflow = 'auto';
-                console.log('📱 Mobile menu closed');
-            }
-
-            // Event listeners
-            if (mobileMenuButton) {
-                mobileMenuButton.addEventListener('click', openMobileMenu);
-            }
-
-            if (closeMobileMenu) {
-                closeMobileMenu.addEventListener('click', closeMobileMenuFunc);
-            }
-
-            if (overlay) {
-                overlay.addEventListener('click', closeMobileMenuFunc);
-            }
-
-            // Close mobile menu when nav item is clicked (mobile only)
-            const navItems = document.querySelectorAll('.nav-item:not(.logout):not(button)');
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    if (window.innerWidth < 768) { // Only on mobile
-                        closeMobileMenuFunc();
-                    }
-                });
-            });
-
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) { // Desktop size
-                    closeMobileMenuFunc();
-                }
-            });
-
-            // ESC key to close mobile menu
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && window.innerWidth < 768) {
-                    closeMobileMenuFunc();
-                }
-            });
+      <script>
+        function openUpdateModalFromData(button) {
+            const id = button.getAttribute('data-item-id');
+            const name = button.getAttribute('data-item-name');
+            const description = button.getAttribute('data-item-description');
+            const price = button.getAttribute('data-item-price');
+            const quantity = button.getAttribute('data-item-quantity');
+            const currency = button.getAttribute('data-item-currency');
+            const imagePath = button.getAttribute('data-item-image-path');
+            openUpdateModal(id, name, description, price, quantity, currency, imagePath);
         }
 
-        function initializeQuickActions() {
-            // Quick Add Item button
-            const quickAddButton = document.getElementById('quick-add-item');
-            if (quickAddButton) {
-                quickAddButton.addEventListener('click', () => {
-                    // Scroll to add item form
-                    const addForm = document.getElementById('add-item-form');
-                    if (addForm) {
-                        addForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        // Focus on first input
-                        const firstInput = addForm.querySelector('input');
-                        if (firstInput) {
-                            setTimeout(() => firstInput.focus(), 500);
-                        }
-                    }
-                    // Close mobile menu if open
-                    if (window.innerWidth < 768) {
-                        document.getElementById('sidebar').classList.add('-translate-x-full');
-                        document.getElementById('mobile-menu-overlay').classList.add('hidden');
-                        document.body.style.overflow = 'auto';
-                    }
-                });
-            }
-
-            // Quick Search button
-            const quickSearchButton = document.getElementById('quick-search');
-            if (quickSearchButton) {
-                quickSearchButton.addEventListener('click', () => {
-                    // Focus on search bar
-                    const searchBar = document.getElementById('search-bar');
-                    if (searchBar) {
-                        searchBar.focus();
-                        searchBar.select();
-                    }
-                    // Close mobile menu if open
-                    if (window.innerWidth < 768) {
-                        document.getElementById('sidebar').classList.add('-translate-x-full');
-                        document.getElementById('mobile-menu-overlay').classList.add('hidden');
-                        document.body.style.overflow = 'auto';
-                    }
-                });
-            }
+        function deleteItemFromData(button) {
+            const id = button.getAttribute('data-item-id');
+            const name = button.getAttribute('data-item-name');
+            deleteItem(id, name);
         }
 
-        function updateItemsCount() {
-            // Update items count badge in sidebar
-            const updateCount = () => {
-                const itemsContainer = document.getElementById('items-container');
-                const itemCards = itemsContainer ? itemsContainer.children.length : 0;
-                const badge = document.getElementById('items-count-badge');
-                if (badge) {
-                    badge.textContent = itemCards;
-                    // Add animation when count changes
-                    badge.classList.add('animate-pulse');
-                    setTimeout(() => badge.classList.remove('animate-pulse'), 1000);
-                }
-            };
-
-            // Update count initially and whenever items change
-            updateCount();
+        function openUpdateModal(id, name, description, price, quantity, currency, imagePath) {
+            // Set form values
+            document.getElementById('update-item-id').value = id;
+            document.getElementById('update-item-name').value = name;
+            document.getElementById('update-item-description').value = description;
+            document.getElementById('update-item-price').value = price;
+            document.getElementById('update-item-quantity').value = quantity;
+            document.getElementById('update-item-currency').value = currency;
             
-            // Watch for changes in items container
-            const itemsContainer = document.getElementById('items-container');
-            if (itemsContainer) {
-                const observer = new MutationObserver(updateCount);
-                observer.observe(itemsContainer, { childList: true });
-            }
-        }
-        
-        // Add debug logging for database connectivity
-        console.log('Dashboard initialized - connecting to MySQL database...');
-          async function fetchItems() {
-            try {
-                console.log('Fetching items from MySQL database...');
-                updateDatabaseStatus('connecting', 'Connecting...');
-                
-                const res = await fetch('/api/spareparts');
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    console.log(`Successfully loaded ${data.length} items from database:`, data);
-                    updateDatabaseStatus('connected', `MySQL Connected (${data.length} items)`);
-                    return data;
-                } else {
-                    console.error('Failed to fetch items - HTTP Status:', res.status);
-                    updateDatabaseStatus('error', `HTTP ${res.status} Error`);
-                    showDatabaseError(`HTTP ${res.status}: ${res.statusText}`);
-                    return [];
-                }
-            } catch (error) {
-                console.error('Failed to fetch items - Network/Database error:', error);
-                updateDatabaseStatus('error', 'Connection Failed');
-                showDatabaseError(error.message);
-                return [];
-            }
-        }
-        
-        function updateDatabaseStatus(status, text) {
-            const statusDot = document.getElementById('db-status');
-            const statusText = document.getElementById('db-status-text');
+            // Clear and hide image preview
+            clearUpdateImagePreview();
             
-            statusText.textContent = text;
-            
-            switch(status) {
-                case 'connected':
-                    statusDot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
-                    break;
-                case 'connecting':
-                    statusDot.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse';
-                    break;
-                case 'error':
-                    statusDot.className = 'w-3 h-3 rounded-full bg-red-500 animate-pulse';
-                    break;
-                default:
-                    statusDot.className = 'w-3 h-3 rounded-full bg-gray-400';
-            }
-        }
-        
-        function showDatabaseError(errorMessage) {
-            const container = document.getElementById('items-container');
-            container.innerHTML = `
-                <div class="col-span-full bg-red-50 border-2 border-red-200 rounded-xl p-8 text-center">
-                    <div class="text-red-600 text-6xl mb-4">⚠️</div>
-                    <h3 class="text-xl font-bold text-red-800 mb-2">Database Connection Error</h3>
-                    <p class="text-red-600 mb-4">${errorMessage}</p>
-                    <div class="text-sm text-red-500">
-                        <p>Possible causes:</p>
-                        <ul class="list-disc list-inside mt-2">
-                            <li>MySQL server is not running</li>
-                            <li>Database 'spairparts_db' doesn't exist</li>
-                            <li>Connection credentials are incorrect</li>
-                            <li>Application backend is not started</li>
-                        </ul>
-                    </div>
-                    <button onclick="location.reload()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                        🔄 Retry Connection
-                    </button>
-                </div>
-            `;
-        }
-        
-        function updateStats(items) {
-            const totalItems = items.length;
-            const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const lowStockItems = items.filter(item => item.quantity < 10).length;
-            const avgPrice = totalItems > 0 ? totalValue / items.reduce((sum, item) => sum + item.quantity, 0) : 0;
-            
-            document.getElementById('total-items').textContent = totalItems;
-            document.getElementById('total-value').textContent = totalValue.toFixed(2);
-            document.getElementById('low-stock').textContent = lowStockItems;
-            document.getElementById('avg-price').textContent = avgPrice.toFixed(2);
-        }
-        
-        function updateSearchResults(query, visibleCount, totalCount) {
-            // Remove existing search results message
-            const existingMessage = document.getElementById('search-results-message');
-            if (existingMessage) {
-                existingMessage.remove();
+            if (imagePath) {
+                document.getElementById('update-preview-img').src = '/uploads/' + imagePath;
+                document.getElementById('update-image-preview').classList.remove('hidden');
+            } else {
+                document.getElementById('update-image-preview').classList.add('hidden');
             }
             
-            // Add search results message if there's a search query
-            if (query) {
-                const itemsContainer = document.getElementById('items-container');
-                const message = document.createElement('div');
-                message.id = 'search-results-message';
-                message.className = 'bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg text-green-700 fade-in';
-                message.innerHTML = `🔍 Search results for "<strong>${query}</strong>": ${visibleCount} of ${totalCount} items found`;
-                itemsContainer.parentNode.insertBefore(message, itemsContainer);
-            }
-        }
-          // Enhanced render function with animations
-        function renderItems(items) {
-            const container = document.getElementById('items-container');
-            container.innerHTML = '';
-            
-            if (items.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full bg-blue-50 border-2 border-blue-200 rounded-xl p-8 text-center">
-                        <div class="text-blue-600 text-6xl mb-4">📦</div>
-                        <h3 class="text-xl font-bold text-blue-800 mb-2">No Items Found</h3>
-                        <p class="text-blue-600 mb-4">The database is empty or no items match your search.</p>
-                        <p class="text-sm text-blue-500">Add some items using the form below to get started!</p>
-                    </div>
-                `;
-                return;
-            }
-              items.forEach((item, index) => {
-                const itemCard = document.createElement('div');
-                itemCard.className = 'bg-white rounded-2xl p-6 shadow-xl border border-white/50 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl fade-in';
-                itemCard.style.animationDelay = `${index * 0.1}s`;                // Create admin buttons (update and delete) - only visible for admins
-                const updateButtonHtml = isAdmin ? `
-                    <button onclick="openUpdateModal(${item.id}, '${item.name}', '${item.description}', ${item.price}, ${item.quantity}, '${item.currency || 'LKR'}')" 
-                            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105 mr-2">
-                        ✏️ Update
-                    </button>
-                ` : '';
-                
-                const deleteButtonHtml = isAdmin ? `
-                    <button onclick="deleteItem(${item.id}, '${item.name}')" 
-                            class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 transform hover:scale-105">
-                        🗑️ Delete
-                    </button>
-                ` : '';
-                
-                // Debug logging for button visibility
-                console.log(`Item ${item.id}: isAdmin=${isAdmin}, updateButton=${updateButtonHtml ? 'VISIBLE' : 'HIDDEN'}, deleteButton=${deleteButtonHtml ? 'VISIBLE' : 'HIDDEN'}`);
-                  itemCard.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-xl font-bold text-secondary item-name">${item.name}</h3>
-                        <div class="flex items-center">
-                            <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold item-id">ID: ${item.id}</span>
-                            <div class="ml-2 flex items-center">
-                                ${updateButtonHtml}
-                                ${deleteButtonHtml}
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 mb-4 item-description">${item.description}</p>
-                    <div class="flex justify-between items-center">
-                        <div class="text-2xl font-bold bg-gradient-to-r from-success to-green-600 bg-clip-text text-transparent">
-                            ${item.price.toFixed(2)} ${item.currency || 'LKR'}
-                        </div>
-                        <div class="px-4 py-2 rounded-full text-sm font-bold ${item.quantity < 10 ? 'bg-gradient-to-r from-accent to-red-600 text-white animate-pulse-glow' : 'bg-gradient-to-r from-primary to-blue-600 text-white'}">
-                            Qty: ${item.quantity}
-                        </div>
-                    </div>
-                    <div class="mt-3 text-xs text-gray-400">
-                        DB ID: ${item.id} | Currency: ${item.currency || 'LKR'} ${isAdmin ? '| Role: ' + userRole : ''}
-                    </div>
-                `;
-                container.appendChild(itemCard);
-            });
-        }
-          async function loadDashboard() {
-            console.log('Loading dashboard data from MySQL...');
-            const items = await fetchItems();
-            updateStats(items);
-            renderItems(items);
-            document.getElementById('last-updated').textContent = new Date().toLocaleString();
-            
-            // Test database connection
-            try {
-                const dbStatus = await fetch('/api/test/db-connection');
-                if (dbStatus.ok) {
-                    const statusData = await dbStatus.json();
-                    console.log('Database connection test:', statusData);
-                    updateDatabaseStatus('connected', `MySQL Connected (${statusData.totalRecords || 0} items)`);
-                }
-            } catch (error) {
-                console.warn('Database status check failed:', error);
-            }
-        }
-        
-        // Load dashboard on page load
-        loadDashboard();
-        
-        // Refresh every 30 seconds
-        setInterval(loadDashboard, 30000);        // Add item form submission
-        document.getElementById('add-item-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const name = document.getElementById('item-name').value.trim();
-            const description = document.getElementById('item-description').value.trim();
-            const price = parseFloat(document.getElementById('item-price').value);
-            const quantity = parseInt(document.getElementById('item-quantity').value);
-            const currency = document.getElementById('item-currency').value;
-
-            // Validation
-            if (!name || !description) {
-                alert('⚠️ Please fill in all fields');
-                return;
-            }
-            if (price <= 0) {
-                alert('⚠️ Price must be greater than 0');
-                return;
-            }
-            if (quantity <= 0) {
-                alert('⚠️ Quantity must be greater than 0');
-                return;
-            }
-
-            const newItem = { name, description, price, quantity, currency };
-            
-            try {
-                console.log('Adding new item to MySQL database:', newItem);
-                const response = await fetch('/api/spareparts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(newItem)
-                });
-
-                if (response.ok) {
-                    const savedItem = await response.json();
-                    console.log('Item successfully saved to database:', savedItem);
-                    alert(`✅ Item "${name}" added successfully to MySQL database!\nDB ID: ${savedItem.id}`);
-                    document.getElementById('add-item-form').reset();
-                    loadDashboard(); // Refresh the dashboard
-                } else {
-                    const errorText = await response.text();
-                    console.error('Failed to save item:', errorText);
-                    alert(`❌ Failed to add item to database. Server error: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error adding item:', error);
-                alert('🚨 Database connection error. Please check if MySQL is running.');
-            }
-        });        // Enhanced Navigation functionality with mobile support
-        document.querySelectorAll('.nav-item:not(.logout):not(button)').forEach(item => {
-            item.addEventListener('click', function() {
-                // Skip if this is a button (quick actions)
-                if (this.tagName === 'BUTTON') return;
-                
-                // Remove active class from all nav items
-                document.querySelectorAll('.nav-item:not(button)').forEach(nav => {
-                    nav.classList.remove('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white');
-                });
-                
-                // Add active class to clicked item
-                this.classList.add('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white');
-                
-                const section = this.getAttribute('data-section');
-                console.log(`📋 Navigation: Switching to section '${section}'`);
-                
-                // Hide all sections first
-                const sectionsToHide = ['analytics-section', 'admin-section', 'users-section', 'settings-section'];
-                sectionsToHide.forEach(sectionId => {
-                    const element = document.getElementById(sectionId);
-                    if (element) element.classList.add('hidden');
-                });
-                
-                // Show main content areas
-                const mainAreas = document.querySelectorAll('.main-content-area');
-                mainAreas.forEach(area => area.classList.remove('hidden'));
-                
-                // Handle specific sections
-                switch(section) {
-                    case 'overview':
-                        // Show main dashboard content (default view)
-                        console.log('📊 Showing overview dashboard');
-                        break;
-                        
-                    case 'items':
-                        // Focus on items grid and scroll to it
-                        const itemsContainer = document.getElementById('items-container');
-                        if (itemsContainer) {
-                            itemsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                        console.log('📦 Focusing on items grid');
-                        break;
-                        
-                    case 'analytics':
-                        document.getElementById('analytics-section').classList.remove('hidden');
-                        loadAnalytics();
-                        console.log('📈 Loading analytics dashboard');
-                        break;
-                        
-                    case 'settings':
-                        // TODO: Add settings section
-                        console.log('⚙️ Settings section (to be implemented)');
-                        alert('⚙️ Settings panel coming soon!');
-                        break;
-                        
-                    case 'admin':
-                        if (isAdmin) {
-                            // TODO: Add admin panel
-                            console.log('🔐 Admin panel (to be implemented)');
-                            alert('🔐 Admin panel coming soon!');
-                        } else {
-                            alert('❌ Access denied. Admin privileges required.');
-                        }
-                        break;
-                        
-                    case 'users':
-                        if (isAdmin) {
-                            // TODO: Add user management
-                            console.log('👥 User management (to be implemented)');
-                            alert('👥 User management panel coming soon!');
-                        } else {
-                            alert('❌ Access denied. Admin privileges required.');
-                        }
-                        break;
-                }
-                
-                // Close mobile menu after navigation (mobile only)
-                if (window.innerWidth < 768) {
-                    setTimeout(() => {
-                        const sidebar = document.getElementById('sidebar');
-                        const overlay = document.getElementById('mobile-menu-overlay');
-                        if (sidebar) sidebar.classList.add('-translate-x-full');
-                        if (overlay) overlay.classList.add('hidden');
-                        document.body.style.overflow = 'auto';
-                    }, 300); // Small delay for better UX
-                }
-            });
-        });
-
-        async function loadAnalytics() {
-            const items = await fetchItems();
-            generateCharts(items);
-            generateInsights(items);
-        }
-
-        function generateCharts(items) {
-            // Stock Distribution Chart
-            const stockCtx = document.getElementById('stockChart').getContext('2d');
-            const stockData = items.map(item => ({ name: item.name, quantity: item.quantity }));
-            drawBarChart(stockCtx, stockData, 'Quantity');
-
-            // Price Analysis Chart
-            const priceCtx = document.getElementById('priceChart').getContext('2d');
-            const priceData = items.map(item => ({ name: item.name, value: item.price }));
-            drawBarChart(priceCtx, priceData, 'Price');
-
-            // Inventory Trends Chart (simulated data for demonstration)
-            const trendCtx = document.getElementById('trendChart').getContext('2d');
-            drawTrendChart(trendCtx, items);
-
-            // Reorder Recommendations Chart
-            const reorderCtx = document.getElementById('reorderChart').getContext('2d');
-            const lowStockItems = items.filter(item => item.quantity < 10);
-            drawReorderChart(reorderCtx, lowStockItems);
-        }
-
-        function drawBarChart(ctx, data, label) {
-            const canvas = ctx.canvas;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (data.length === 0) {
-                ctx.fillStyle = '#3498db';
-                ctx.font = '16px Arial';
-                ctx.fillText('No data available', canvas.width/2 - 60, canvas.height/2);
-                return;
-            }
-            
-            const maxValue = Math.max(...data.map(d => d.value || d.quantity));
-            const barWidth = Math.max(20, canvas.width / data.length - 10);
-            const barHeight = canvas.height - 40;
-            
-            data.slice(0, Math.floor(canvas.width / (barWidth + 10))).forEach((item, index) => {
-                const value = item.value || item.quantity;
-                const height = (value / maxValue) * barHeight;
-                const x = index * (barWidth + 10) + 5;
-                const y = canvas.height - height - 20;
-                
-                ctx.fillStyle = '#3498db';
-                ctx.fillRect(x, y, barWidth, height);
-                
-                ctx.fillStyle = '#2c3e50';
-                ctx.font = '10px Arial';
-                ctx.fillText(item.name.substring(0, 8), x, canvas.height - 5);
-                ctx.fillText(value.toFixed(1), x, y - 5);
-            });
-        }
-
-        function drawTrendChart(ctx, items) {
-            const canvas = ctx.canvas;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Simulated trend data for the last 6 months
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-            const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const trendData = months.map((month, index) => totalValue * (0.8 + index * 0.04));
-            
-            const maxValue = Math.max(...trendData);
-            const stepX = canvas.width / (months.length - 1);
-            const stepY = (canvas.height - 40) / maxValue;
-            
-            ctx.strokeStyle = '#27ae60';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            
-            trendData.forEach((value, index) => {
-                const x = index * stepX;
-                const y = canvas.height - (value * stepY) - 20;
-                
-                if (index === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-                
-                // Draw points
-                ctx.fillStyle = '#27ae60';
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                // Draw labels
-                ctx.fillStyle = '#2c3e50';
-                ctx.font = '10px Arial';
-                ctx.fillText(months[index], x - 10, canvas.height - 5);
-                ctx.fillText(value.toFixed(0), x - 15, y - 10);
-            });
-            
-            ctx.strokeStyle = '#27ae60';
-            ctx.stroke();
-        }
-
-        function drawReorderChart(ctx, lowStockItems) {
-            const canvas = ctx.canvas;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (lowStockItems.length === 0) {
-                ctx.fillStyle = '#27ae60';
-                ctx.font = '16px Arial';
-                ctx.fillText('All items well stocked!', canvas.width/2 - 80, canvas.height/2);
-                return;
-            }
-            
-            const reorderData = lowStockItems.slice(0, 5).map(item => ({
-                name: item.name,
-                current: item.quantity,
-                recommended: Math.max(20, item.quantity * 3)
-            }));
-            
-            const maxValue = Math.max(...reorderData.map(d => d.recommended));
-            const barWidth = canvas.width / reorderData.length / 2 - 5;
-            
-            reorderData.forEach((item, index) => {
-                const x = index * (barWidth * 2 + 10) + 5;
-                const currentHeight = (item.current / maxValue) * (canvas.height - 40);
-                const recommendedHeight = (item.recommended / maxValue) * (canvas.height - 40);
-                
-                // Current stock (red)
-                ctx.fillStyle = '#e74c3c';
-                ctx.fillRect(x, canvas.height - currentHeight - 20, barWidth, currentHeight);
-                
-                // Recommended stock (green)
-                ctx.fillStyle = '#27ae60';
-                ctx.fillRect(x + barWidth, canvas.height - recommendedHeight - 20, barWidth, recommendedHeight);
-                
-                // Labels
-                ctx.fillStyle = '#2c3e50';
-                ctx.font = '8px Arial';
-                ctx.fillText(item.name.substring(0, 6), x, canvas.height - 5);
-            });
-        }
-
-        function generateInsights(items) {
-            // Critical insights
-            const criticalItems = items.filter(item => item.quantity <= 5);
-            const criticalContent = criticalItems.length > 0 ? 
-                `${criticalItems.length} items critically low: ${criticalItems.map(i => i.name).join(', ')}` :
-                'No critical stock issues';
-            document.getElementById('critical-content').innerHTML = criticalContent;
-
-            // Warning insights
-            const lowStockItems = items.filter(item => item.quantity > 5 && item.quantity < 10);
-            const warningContent = lowStockItems.length > 0 ?
-                `${lowStockItems.length} items need restocking: ${lowStockItems.map(i => i.name).join(', ')}` :
-                'Stock levels are healthy';
-            document.getElementById('warning-content').innerHTML = warningContent;
-
-            // Recommendations
-            const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const avgPrice = totalValue / Math.max(1, items.reduce((sum, item) => sum + item.quantity, 0));
-            const highValueItems = items.filter(item => item.price > avgPrice * 1.5);
-            const recommendationContent = `
-                • Consider bulk purchasing for ${criticalItems.length + lowStockItems.length} low-stock items<br>
-                • High-value items (${highValueItems.length}): Monitor closely for demand patterns<br>
-                • Total inventory value: $${totalValue.toFixed(2)}
-            `;
-            document.getElementById('recommendation-content').innerHTML = recommendationContent;            // Forecast
-            const forecastContent = `
-                • Expected reorder cost: ${((criticalItems.length + lowStockItems.length) * avgPrice * 10).toFixed(2)}<br>
-                • Suggested safety stock: 15 units per item<br>
-                • Next review date: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}<br>
-                • Inventory turnover: Estimated 6 months
-            `;
-            document.getElementById('forecast-content').innerHTML = forecastContent;
-        }
-
-        // Search functionality
-        function performSearch() {
-            const query = document.getElementById('search-bar').value.toLowerCase().trim();
-            const items = document.querySelectorAll('#items-container > div');
-            let visibleCount = 0;
-            
-            items.forEach(item => {
-                const name = item.querySelector('.item-name').textContent.toLowerCase();
-                const description = item.querySelector('.item-description').textContent.toLowerCase();
-                const itemId = item.querySelector('.item-id').textContent.toLowerCase();
-                
-                // Remove previous highlights
-                removeHighlights(item);
-                
-                if (query === '' || name.includes(query) || description.includes(query) || itemId.includes(query)) {
-                    item.style.display = '';
-                    visibleCount++;
-                    
-                    // Add highlights if there's a search query
-                    if (query) {
-                        highlightSearchTerm(item, query);
-                    }
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            
-            // Show search results count
-            updateSearchResults(query, visibleCount, items.length);
-        }
-        
-        function highlightSearchTerm(item, query) {
-            const nameElement = item.querySelector('.item-name');
-            const descElement = item.querySelector('.item-description');
-            const idElement = item.querySelector('.item-id');
-            
-            [nameElement, descElement, idElement].forEach(element => {
-                if (element && element.textContent.toLowerCase().includes(query)) {
-                    const regex = new RegExp(`(${query})`, 'gi');
-                    element.innerHTML = element.textContent.replace(regex, '<span class="search-results-highlight">$1</span>');
-                }
-            });
-        }
-        
-        function removeHighlights(item) {
-            const highlightedElements = item.querySelectorAll('.search-results-highlight');
-            highlightedElements.forEach(element => {
-                const parent = element.parentNode;
-                parent.replaceChild(document.createTextNode(element.textContent), element);
-                parent.normalize();
-            });
-        }
-        
-        function clearSearch() {
-            document.getElementById('search-bar').value = '';
-            performSearch(); // This will show all items and remove highlights
-        }
-
-        // Event listeners for search functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            // Search button click
-            document.getElementById('search-button').addEventListener('click', performSearch);
-            
-            // Clear button click
-            document.getElementById('clear-search-button').addEventListener('click', clearSearch);
-            
-            // Search on Enter key press
-            document.getElementById('search-bar').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    performSearch();
-                }
-            });
-            
-            // Real-time search as user types
-            document.getElementById('search-bar').addEventListener('input', function() {
-                // Debounce the search to avoid too many calls
-                clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(performSearch, 300);
-            });        });        // Delete item functionality (admin only)
-        async function deleteItem(itemId, itemName) {
-            console.log(`🗑️ Delete requested: Item ${itemId} (${itemName}), isAdmin=${isAdmin}`);
-            
-            if (!isAdmin) {
-                alert('❌ Access denied. Only administrators can delete items.');
-                return;
-            }
-
-            if (!confirm(`🗑️ Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`)) {
-                return;
-            }
-
-            try {
-                console.log(`Calling DELETE API: /api/spareparts/${itemId}`);
-                
-                const response = await fetch(`/api/spareparts/${itemId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                console.log(`API Response: ${response.status} ${response.statusText}`);
-
-                if (response.ok) {
-                    const message = await response.text();
-                    console.log('✅ Delete successful:', message);
-                    alert(`✅ "${itemName}" has been deleted successfully!`);
-                    loadDashboard(); // Refresh the dashboard
-                } else if (response.status === 403) {
-                    const errorMessage = await response.text();
-                    console.error('❌ 403 Forbidden:', errorMessage);
-                    alert(`❌ Access denied: ${errorMessage}`);
-                } else if (response.status === 401) {
-                    console.error('❌ 401 Unauthorized');
-                    alert('❌ Authentication required. Please login again.');
-                    window.location.href = '/login';
-                } else if (response.status === 404) {
-                    console.error('❌ 404 Not Found');
-                    alert('❌ Item not found. It may have already been deleted.');
-                    loadDashboard(); // Refresh to update the view
-                } else {
-                    const errorText = await response.text();
-                    console.error('❌ Server error:', errorText);
-                    alert(`❌ Failed to delete item. Server error: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('🚨 Network error:', error);
-                alert('🚨 Network error. Please check your connection and try again.');
-            }        }
-
-        // Update item functionality (admin only)
-        function openUpdateModal(itemId, itemName, itemDescription, itemPrice, itemQuantity, itemCurrency) {
-            console.log(`✏️ Update requested: Item ${itemId} (${itemName}), isAdmin=${isAdmin}`);
-            
-            if (!isAdmin) {
-                alert('❌ Access denied. Only administrators can update items.');
-                return;
-            }
-
-            // Populate the modal with current values
-            document.getElementById('update-item-id').value = itemId;
-            document.getElementById('update-item-name').value = itemName;
-            document.getElementById('update-item-description').value = itemDescription;
-            document.getElementById('update-item-price').value = itemPrice;
-            document.getElementById('update-item-quantity').value = itemQuantity;
-            document.getElementById('update-item-currency').value = itemCurrency;
-
             // Show the modal
             document.getElementById('updateModal').classList.remove('hidden');
         }
@@ -1200,94 +542,16 @@
             document.getElementById('updateModal').classList.add('hidden');
             // Clear the form
             document.getElementById('update-item-form').reset();
+            // Clear image preview
+            clearUpdateImagePreview();
+        }
+        
+        function clearUpdateImagePreview() {
+            document.getElementById('update-item-image').value = '';
+            document.getElementById('update-image-preview').classList.add('hidden');
+            document.getElementById('update-preview-img').src = '';
         }
 
-        async function updateItem(itemId, updatedData) {
-            console.log(`🔄 Updating item ${itemId}:`, updatedData);
-
-            if (!isAdmin) {
-                alert('❌ Access denied. Only administrators can update items.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/spareparts/${itemId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updatedData)
-                });
-
-                console.log(`API Response: ${response.status} ${response.statusText}`);
-
-                if (response.ok) {
-                    const updatedItem = await response.json();
-                    console.log('✅ Update successful:', updatedItem);
-                    alert(`✅ "${updatedData.name}" has been updated successfully!`);
-                    closeUpdateModal();
-                    loadDashboard(); // Refresh the dashboard
-                } else if (response.status === 403) {
-                    const errorMessage = await response.text();
-                    console.error('❌ 403 Forbidden:', errorMessage);
-                    alert(`❌ Access denied: ${errorMessage}`);
-                } else if (response.status === 401) {
-                    console.error('❌ 401 Unauthorized');
-                    alert('❌ Authentication required. Please login again.');
-                    window.location.href = '/login';
-                } else if (response.status === 404) {
-                    console.error('❌ 404 Not Found');
-                    alert('❌ Item not found. It may have been deleted.');
-                    closeUpdateModal();
-                    loadDashboard(); // Refresh to update the view
-                } else {
-                    const errorText = await response.text();
-                    console.error('❌ Server error:', errorText);
-                    alert(`❌ Failed to update item. Server error: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('🚨 Network error:', error);
-                alert('🚨 Network error. Please check your connection and try again.');
-            }
-        }
-
-        // Update form submission handler
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('update-item-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const itemId = document.getElementById('update-item-id').value;
-                const updatedData = {
-                    name: document.getElementById('update-item-name').value.trim(),
-                    description: document.getElementById('update-item-description').value.trim(),
-                    price: parseFloat(document.getElementById('update-item-price').value),
-                    quantity: parseInt(document.getElementById('update-item-quantity').value),
-                    currency: document.getElementById('update-item-currency').value
-                };
-
-                // Validate the data
-                if (!updatedData.name || !updatedData.description || isNaN(updatedData.price) || isNaN(updatedData.quantity)) {
-                    alert('❌ Please fill in all fields with valid values.');
-                    return;
-                }
-
-                if (updatedData.price < 0 || updatedData.quantity < 0) {
-                    alert('❌ Price and quantity must be non-negative.');
-                    return;
-                }
-
-                await updateItem(itemId, updatedData);
-            });
-
-            // Close modal when clicking outside
-            document.getElementById('updateModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeUpdateModal();
-                }
-            });
-        });
-
-        // Logout functionality
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 // Create a form to submit POST request for logout
@@ -1308,17 +572,14 @@
                 document.body.appendChild(form);
                 form.submit();
             }        }
-    </script>
-
-    <!-- Update Item Modal -->
-    <div id="updateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all">
+    </script>    <!-- Update Item Modal -->
+    <div id="updateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-secondary">✏️ Update Spare Part</h2>
                 <button onclick="closeUpdateModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">×</button>
             </div>
-            
-            <form id="update-item-form" class="space-y-4">
+              <form id="update-item-form" class="space-y-4" enctype="multipart/form-data">
                 <input type="hidden" id="update-item-id">
                 
                 <input type="text" 
@@ -1355,6 +616,25 @@
                     <option value="EUR">EUR (Euro)</option>
                     <option value="GBP">GBP (British Pound)</option>
                 </select>
+
+                <!-- Image Upload Section for Update -->
+                <div class="w-full">
+                    <label for="update-item-image" class="block text-sm font-medium text-gray-700 mb-2">📷 Update Item Image (Optional)</label>
+                    <div class="flex items-center justify-center w-full">                            <label for="update-item-image" class="image-upload-area flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-300">
+                            <div class="flex flex-col items-center justify-center pt-3 pb-3">
+                                <svg class="w-6 h-6 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                </svg>
+                                <p class="text-xs text-gray-500"><span class="font-semibold">Click to upload new image</span></p>
+                            </div>
+                            <input id="update-item-image" type="file" class="hidden" accept="image/*" />
+                        </label>
+                    </div>
+                    <div id="update-image-preview" class="mt-2 hidden">
+                        <img id="update-preview-img" src="" alt="Preview" class="max-w-full h-20 object-cover rounded-lg border-2 border-gray-200">
+                        <button type="button" onclick="clearUpdateImagePreview()" class="mt-1 text-xs text-red-600 hover:text-red-800">Remove Image</button>
+                    </div>
+                </div>
                 
                 <div class="flex space-x-3 pt-4">
                     <button type="button" 
@@ -1369,6 +649,555 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div>      <script th:inline="javascript">
+        // Store admin status from server
+        const isAdmin = /*[[${isAdmin}]]*/ false;
+        const currentUser = /*[[${username}]]*/ 'User';
+        const userRole = /*[[${userRole}]]*/ 'USER';
+        
+        console.log('🔒 User Info:', { isAdmin, currentUser, userRole });
+
+        // Initialize navigation functionality
+        function initializeNavigation() {
+            const navItems = document.querySelectorAll('.nav-item[data-section]');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const section = this.getAttribute('data-section');
+                    
+                    // Remove active class from all nav items
+                    navItems.forEach(nav => nav.classList.remove('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white'));
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active', 'bg-gradient-to-r', 'from-primary', 'to-purple', 'text-white');
+                    
+                    // Handle section switching
+                    switch(section) {
+                        case 'overview':
+                            scrollToElement('stats-section');
+                            break;
+                        case 'items':
+                            scrollToElement('items-container');
+                            break;
+                        case 'analytics':
+                            document.getElementById('analytics-section').classList.remove('hidden');
+                            loadAnalytics();
+                            scrollToElement('analytics-section');
+                            break;
+                        default:
+                            document.getElementById('analytics-section').classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Initialize image upload functionality
+        function initializeImageUpload() {
+            const imageInput = document.getElementById('item-image');
+            const previewContainer = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            
+            if (imageInput) {
+                imageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                            alert('File size must be less than 5MB');
+                            this.value = '';
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewContainer.classList.remove('hidden');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Update modal image upload
+            const updateImageInput = document.getElementById('update-item-image');
+            const updatePreviewContainer = document.getElementById('update-image-preview');
+            const updatePreviewImg = document.getElementById('update-preview-img');
+            
+            if (updateImageInput) {
+                updateImageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                            alert('File size must be less than 5MB');
+                            this.value = '';
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            updatePreviewImg.src = e.target.result;
+                            updatePreviewContainer.classList.remove('hidden');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        }
+
+        // Utility function to scroll to element
+        function scrollToElement(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Clear image preview function
+        function clearImagePreview() {
+            const imageInput = document.getElementById('item-image');
+            const previewContainer = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            
+            if (imageInput) imageInput.value = '';
+            if (previewContainer) previewContainer.classList.add('hidden');
+            if (previewImg) previewImg.src = '';
+        }
+
+        // Enhanced search functionality with highlighting
+        function performSearch() {
+            const query = document.getElementById('search-bar').value.toLowerCase().trim();
+            const itemCards = document.querySelectorAll('#items-container > div');
+            const resultsContainer = document.getElementById('search-results-container');
+            let visibleCount = 0;
+            
+            itemCards.forEach(card => {
+                const name = card.querySelector('.item-name')?.textContent.toLowerCase() || '';
+                const description = card.querySelector('.item-description')?.textContent.toLowerCase() || '';
+                const id = card.querySelector('.item-id')?.textContent.toLowerCase() || '';
+                
+                const isVisible = query === '' || name.includes(query) || description.includes(query) || id.includes(query);
+                
+                if (isVisible) {
+                    card.style.display = '';
+                    visibleCount++;
+                    
+                    // Highlight search terms
+                    if (query !== '') {
+                        highlightSearchTerms(card, query);
+                    } else {
+                        removeHighlights(card);
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Update search results message
+            if (query !== '') {
+                resultsContainer.innerHTML = `
+                    <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6">
+                        <strong>Search Results:</strong> Found ${visibleCount} item(s) matching "${query}"
+                        ${visibleCount === 0 ? ' - Try a different search term.' : ''}
+                    </div>
+                `;
+            } else {
+                resultsContainer.innerHTML = '';
+            }
+        }
+
+        function highlightSearchTerms(card, query) {
+            const nameElement = card.querySelector('.item-name');
+            const descriptionElement = card.querySelector('.item-description');
+            
+            if (nameElement) {
+                highlightText(nameElement, query);
+            }
+            if (descriptionElement) {
+                highlightText(descriptionElement, query);
+            }
+        }
+
+        function highlightText(element, query) {
+            const originalText = element.getAttribute('data-original-text') || element.textContent;
+            element.setAttribute('data-original-text', originalText);
+            
+            const regex = new RegExp(`(${query})`, 'gi');
+            const highlightedText = originalText.replace(regex, '<span class="search-results-highlight">$1</span>');
+            element.innerHTML = highlightedText;
+        }
+
+        function removeHighlights(card) {
+            const elements = card.querySelectorAll('[data-original-text]');
+            elements.forEach(element => {
+                element.textContent = element.getAttribute('data-original-text');
+                element.removeAttribute('data-original-text');
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('search-bar').value = '';
+            performSearch();
+        }
+
+        // Enhanced form submission with better error handling
+        async function submitForm(formData, isUpdate = false, itemId = null) {
+            const submitButton = document.querySelector(`#${isUpdate ? 'update' : 'add'}-item-form button[type="submit"]`);
+            const originalText = submitButton.textContent;
+            
+            try {
+                submitButton.disabled = true;
+                submitButton.classList.add('loading');
+                submitButton.textContent = isUpdate ? 'Updating...' : 'Adding...';
+                
+                const url = isUpdate ? `/api/spareparts/${itemId}/with-image` : '/api/spareparts/with-image';
+                const method = isUpdate ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    body: formData
+                });
+                  if (response.ok) {
+                    const result = await response.json();
+                    showSuccessMessage(isUpdate ? 'Item updated successfully!' : 'Item added successfully!');
+                    
+                    // Refresh statistics immediately after successful operation
+                    await refreshStatisticsFromAPI();
+                    
+                    if (isUpdate) {
+                        closeUpdateModal();
+                    } else {
+                        document.getElementById('add-item-form').reset();
+                        clearImagePreview();
+                    }
+                    
+                    // Refresh the page to show updated data
+                    setTimeout(() => window.location.reload(), 1000);
+                    
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Server error');
+                }
+                
+            } catch (error) {
+                console.error('Form submission error:', error);
+                showErrorMessage(error.message || 'Failed to submit form');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.classList.remove('loading');
+                submitButton.textContent = originalText;
+            }
+        }
+
+        function showSuccessMessage(message) {
+            const container = document.getElementById('search-results-container');
+            container.innerHTML = `
+                <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 animate-fade-in">
+                    <strong>✅ Success:</strong> ${message}
+                </div>
+            `;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        function showErrorMessage(message) {
+            const container = document.getElementById('search-results-container');
+            container.innerHTML = `
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 animate-fade-in">
+                    <strong>❌ Error:</strong> ${message}
+                </div>
+            `;
+        }        // Enhanced delete function with better confirmation
+        async function deleteItem(itemId, itemName) {
+            if (!isAdmin) {
+                showErrorMessage('Access denied. Only administrators can delete items.');
+                return;
+            }
+
+            const confirmed = confirm(`🗑️ Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`);
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(`/api/spareparts/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showSuccessMessage(`"${itemName}" has been deleted successfully!`);
+                    // Refresh statistics after deletion
+                    await refreshStatisticsFromAPI();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Failed to delete item');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showErrorMessage(error.message || 'Failed to delete item');
+            }
+        }
+
+        // Statistics API Integration Functions
+        async function refreshStatisticsFromAPI() {
+            console.log('Refreshing statistics from API...');
+            try {
+                // Show loading state on statistics cards
+                showStatisticsLoading(true);
+                
+                const response = await fetch('/api/spareparts/statistics');
+                if (response.ok) {
+                    const stats = await response.json();
+                    console.log('API Statistics received:', stats);
+                    
+                    // Update DOM elements with API data
+                    updateStatisticsDisplay(stats);
+                    
+                    console.log('✅ Statistics updated successfully from API');
+                    
+                    // Update database status to show stats were refreshed
+                    updateDatabaseStatus('connected', `Stats Updated (${stats.lastUpdated || new Date().toLocaleString()})`);
+                } else {
+                    console.error('Failed to fetch statistics from API:', response.status);
+                    showErrorMessage('Failed to refresh statistics from server');
+                    updateDatabaseStatus('error', 'Stats API Error');
+                }
+            } catch (error) {
+                console.error('Error refreshing statistics from API:', error);
+                showErrorMessage('Network error while refreshing statistics');
+                updateDatabaseStatus('error', 'Stats API Failed');
+            } finally {
+                // Hide loading state
+                showStatisticsLoading(false);
+            }
+        }        function updateStatisticsDisplay(stats) {
+            const totalItemsEl = document.getElementById('total-items');
+            const totalValueEl = document.getElementById('total-value');
+            const lowStockEl = document.getElementById('low-stock');
+            const avgPriceEl = document.getElementById('avg-price');
+            const itemsCountBadge = document.getElementById('items-count-badge');
+            
+            // Update with formatted values from API
+            if (totalItemsEl) {
+                totalItemsEl.textContent = stats.totalItems || 0;
+                totalItemsEl.setAttribute('data-original', stats.totalItems || 0);
+            }
+            if (totalValueEl) totalValueEl.textContent = stats.formattedTotalValue || '0.00';
+            if (lowStockEl) lowStockEl.textContent = stats.lowStockItems || 0;
+            if (avgPriceEl) avgPriceEl.textContent = stats.formattedAveragePrice || '0.00';
+            if (itemsCountBadge) itemsCountBadge.textContent = stats.totalItems || 0;
+            
+            // Add animation to show the update
+            [totalItemsEl, totalValueEl, lowStockEl, avgPriceEl, itemsCountBadge].forEach(el => {
+                if (el) {
+                    el.classList.add('animate-pulse');
+                    setTimeout(() => el.classList.remove('animate-pulse'), 1000);
+                }
+            });
+        }
+
+        function showStatisticsLoading(isLoading) {
+            const statisticsCards = document.querySelectorAll('#stats-section .text-4xl');
+            statisticsCards.forEach(card => {
+                if (isLoading) {
+                    card.classList.add('animate-pulse', 'text-gray-400');
+                    card.dataset.originalText = card.textContent;
+                    card.textContent = '...';
+                } else {
+                    card.classList.remove('animate-pulse', 'text-gray-400');
+                    if (card.dataset.originalText && card.textContent === '...') {
+                        card.textContent = card.dataset.originalText;
+                    }
+                }
+            });
+        }
+
+        function updateDatabaseStatus(status, text) {
+            const statusDot = document.getElementById('db-status');
+            const statusText = document.getElementById('db-status-text');
+            
+            if (statusText) statusText.textContent = text;
+            
+            if (statusDot) {
+                switch(status) {
+                    case 'connected':
+                        statusDot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+                        break;
+                    case 'connecting':
+                        statusDot.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse';
+                        break;
+                    case 'error':
+                        statusDot.className = 'w-3 h-3 rounded-full bg-red-500 animate-pulse';
+                        break;
+                }
+            }
+        }
+
+        // Mobile Menu Functionality with null checks
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-menu-overlay');
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
+
+            function openMobileMenu() {
+                if (sidebar && overlay) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            function closeMobileMenuFunc() {
+                if (sidebar && overlay) {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            }
+
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', openMobileMenu);
+            }
+
+            if (closeMobileMenu) {
+                closeMobileMenu.addEventListener('click', closeMobileMenuFunc);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closeMobileMenuFunc);
+            }
+
+            // Close mobile menu when nav item is clicked
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth < 768) { // Only on mobile
+                        closeMobileMenuFunc();
+                    }
+                });
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    closeMobileMenuFunc();
+                }
+            });
+
+            // Initialize navigation functionality
+            initializeNavigation();
+            
+            // Initialize image upload functionality
+            initializeImageUpload();
+
+            // Initialize search functionality
+            const searchButton = document.getElementById('search-button');
+            const clearButton = document.getElementById('clear-search-button');
+            const searchBar = document.getElementById('search-bar');
+
+            if (searchButton) {
+                searchButton.addEventListener('click', performSearch);
+            }
+
+            if (clearButton) {
+                clearButton.addEventListener('click', clearSearch);
+            }
+
+            if (searchBar) {
+                searchBar.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        performSearch();
+                    }
+                });
+                
+                // Real-time search with debouncing
+                let searchTimeout;
+                searchBar.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(performSearch, 300);
+                });
+            }
+
+            // Initialize form submissions
+            const addForm = document.getElementById('add-item-form');
+            if (addForm) {
+                addForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData();
+                    formData.append('name', document.getElementById('item-name').value);
+                    formData.append('description', document.getElementById('item-description').value);
+                    formData.append('price', document.getElementById('item-price').value);
+                    formData.append('quantity', document.getElementById('item-quantity').value);
+                    formData.append('currency', document.getElementById('item-currency').value);
+                    
+                    const imageFile = document.getElementById('item-image').files[0];
+                    if (imageFile) {
+                        formData.append('image', imageFile);
+                    }
+                    
+                    await submitForm(formData, false);
+                });
+            }
+
+            const updateForm = document.getElementById('update-item-form');
+            if (updateForm) {
+                updateForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const itemId = document.getElementById('update-item-id').value;
+                    const formData = new FormData();
+                    formData.append('name', document.getElementById('update-item-name').value);
+                    formData.append('description', document.getElementById('update-item-description').value);
+                    formData.append('price', document.getElementById('update-item-price').value);
+                    formData.append('quantity', document.getElementById('update-item-quantity').value);
+                    formData.append('currency', document.getElementById('update-item-currency').value);
+                    
+                    const imageFile = document.getElementById('update-item-image').files[0];
+                    if (imageFile) {
+                        formData.append('image', imageFile);
+                    }
+                    
+                    await submitForm(formData, true, itemId);
+                });
+            }
+
+            // Quick action buttons
+            const quickAddButton = document.getElementById('quick-add-item');
+            if (quickAddButton) {
+                quickAddButton.addEventListener('click', function() {
+                    scrollToElement('add-item-form');
+                    document.getElementById('item-name').focus();
+                });
+            }
+
+            const quickSearchButton = document.getElementById('quick-search');
+            if (quickSearchButton) {
+                quickSearchButton.addEventListener('click', function() {
+                    document.getElementById('search-bar').focus();
+                });
+            }
+
+            // Update last updated time
+            const lastUpdated = document.getElementById('last-updated');
+            if (lastUpdated) {
+                lastUpdated.textContent = new Date().toLocaleString();
+            }            // Initialize database status
+            const dbStatus = document.getElementById('db-status');
+            const dbStatusText = document.getElementById('db-status-text');
+            if (dbStatus && dbStatusText) {
+                dbStatus.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+                dbStatusText.textContent = 'Connected';
+            }
+
+            // Load initial statistics from API
+            console.log('Loading initial statistics from API...');
+            refreshStatisticsFromAPI();
+
+            // Setup periodic refresh of statistics (every 30 seconds)
+            setInterval(refreshStatisticsFromAPI, 30000);
+
+            console.log('✅ Dashboard initialized successfully');
+        });
+    </script>
 </body>
 </html>

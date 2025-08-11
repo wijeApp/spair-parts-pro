@@ -37,9 +37,8 @@ if "%MYSQL_RUNNING%"=="true" (
     echo.
     echo Option 1: Starting with MySQL (Development Profile)
     echo Command: mvn spring-boot:run -Dspring-boot.run.profiles=dev
-    echo.
-    echo ⚠️  If this fails, make sure:
-    echo    - MySQL database 'spareparts_db' exists
+    echo.    echo ⚠️  If this fails, make sure:
+    echo    - MySQL database 'spareparts_prod' exists
     echo    - Username/password in application-dev.properties are correct
     echo    - MySQL is accepting connections on port 3306
     echo.
@@ -90,10 +89,9 @@ if "%MYSQL_RUNNING%"=="false" (
     echo.
     echo 1. Database doesn't exist:
     echo    - Run: mysql -u root -p ^< src\main\resources\database-setup.sql
-    echo.
-    echo 2. Wrong credentials:
+    echo.    echo 2. Wrong credentials:
     echo    - Check application-dev.properties
-    echo    - Verify: mysql -u spareparts_user -p spareparts_db
+    echo    - Verify: mysql -u sa -p spareparts_prod
     echo.
     echo 3. Connection refused:
     echo    - Check MySQL is on port 3306

@@ -5,7 +5,7 @@ echo ======================================
 echo.
 echo Configuration:
 echo - Profile: dev
-echo - Database: MySQL (localhost:3306/spareparts_db)
+echo - Database: MySQL (localhost:3306/spareparts_prod)
 echo - Username: root
 echo - Password: myRoot@123
 echo.
